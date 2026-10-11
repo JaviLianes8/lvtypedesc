@@ -6,6 +6,23 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0]
+
+- Command-line interface: a `lvtypedesc` console script with `decode` (optional
+  `--tree`), `codes`, `--version` and runnable `--help` examples. Errors go to
+  stderr with exit code 1.
+- `to_bytes` re-emits the canonical short-form descriptor for every modelled
+  node, so parsing and emission are inverses for the supported subset.
+- New public API: `TypeCode` enum, `known_codes()`, `pretty()`, `to_bytes()`,
+  and the `FixedPoint` and `Refnum` node types.
+- Fixed-point (`FXP`) and refnum descriptors are now recognised. Their
+  type-specific bytes are preserved verbatim rather than interpreted, because
+  their internal layout is version-specific and not fully documented.
+- `LVString` now carries the descriptor's 32-bit `size` word (`VARIABLE` when not
+  fixed), so fixed-size strings round-trip exactly.
+- README now states the provenance plainly: the code table is community
+  reverse-engineering from the LabVIEW wiki, not an official NI byte spec.
+
 ## [0.1.0]
 
 - First release.
