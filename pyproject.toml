@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lvtypedesc"
-version = "0.1.0"
+version = "0.2.0"
 description = "Parse LabVIEW type-descriptor byte strings into a readable, typed schema"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -22,6 +22,9 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["ruff", "mypy", "pytest", "build", "twine"]
+
+[project.scripts]
+lvtypedesc = "lvtypedesc._cli:main"
 
 [project.urls]
 Homepage = "https://lianes8studio.com"
