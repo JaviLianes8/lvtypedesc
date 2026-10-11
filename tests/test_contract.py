@@ -4,7 +4,19 @@ import lvtypedesc
 
 # The public API. Add every exported name here as the library grows; this list is the
 # contract and the test below fails if the module and this list disagree.
-PUBLIC_API: list[str] = []
+PUBLIC_API: list[str] = [
+    "VARIABLE",
+    "Array",
+    "Boolean",
+    "Category",
+    "Cluster",
+    "LVString",
+    "Scalar",
+    "TypeDesc",
+    "TypeDescError",
+    "describe",
+    "parse_type_descriptor",
+]
 
 
 def test_all_lists_exactly_the_public_api() -> None:
