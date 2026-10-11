@@ -29,7 +29,13 @@ class Boolean(TypeDesc):
 
 @dataclass(frozen=True)
 class LVString(TypeDesc):
-    """A variable-length string, path or picture."""
+    """A variable-length string, path or picture.
+
+    ``size`` is the descriptor's 32-bit size word: ``VARIABLE`` when the size is
+    not fixed (``0xFFFFFFFF``), otherwise the fixed byte count.
+    """
+
+    size: int = VARIABLE
 
 
 @dataclass(frozen=True)
@@ -52,6 +58,32 @@ class Cluster(TypeDesc):
     fields: tuple[TypeDesc, ...] = field(default_factory=tuple)
 
 
+@dataclass(frozen=True)
+class FixedPoint(TypeDesc):
+    """A LabVIEW fixed-point number (FXP).
+
+    The word, delta and offset encoding inside an FXP descriptor is
+    version-specific and not fully documented, so the type-specific bytes are
+    preserved verbatim in ``payload`` rather than parsed into fields. This keeps
+    round-trip exact without inventing an interpretation.
+    """
+
+    payload: bytes = b""
+
+
+@dataclass(frozen=True)
+class Refnum(TypeDesc):
+    """A LabVIEW refnum (a handle to a queue, VISA resource, control, ...).
+
+    ``subtype`` is the first payload word, which identifies the refnum kind. Its
+    meaning is only partly documented, so it is surfaced best-effort and the full
+    type-specific bytes are kept in ``payload`` for exact round-trip.
+    """
+
+    subtype: int = 0
+    payload: bytes = b""
+
+
 def describe(node: TypeDesc) -> str:
     """Render a parsed descriptor as a compact, readable one-line string."""
     if isinstance(node, Array):
@@ -59,4 +91,6 @@ def describe(node: TypeDesc) -> str:
     if isinstance(node, Cluster):
         inner = ", ".join(describe(f) for f in node.fields)
         return f"Cluster {{ {inner} }}"
+    if isinstance(node, Refnum):
+        return f"Refnum(subtype=0x{node.subtype:02x})"
     return node.name
