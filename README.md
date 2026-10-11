@@ -46,11 +46,14 @@ documented set rather than a guarantee for every build.
 ## Why
 
 LabVIEW ships flattened data with a leading type descriptor, and decoding it in
-Python needs that descriptor parsed into a schema first. The existing PyPI
-packages read LabVIEW source files instead: `pylabview` and `lvkit` parse the
-`.vi` binary, `pylavi` validates VI files. None exposes a parser for the runtime
-type-descriptor byte string. This library fills that gap with a zero-dependency,
-fully typed reader for the common documented types.
+Python needs that descriptor parsed into a schema first. OpenG's Variant Data
+Library parses descriptors inside LabVIEW, but it is LabVIEW VIs, not Python. The
+existing PyPI packages read LabVIEW source files instead: `pylabview` and `lvkit`
+parse the `.vi` binary, `pylavi` validates VI files. None of them exposes a parser
+for the raw runtime type-descriptor byte string that precedes flattened data or
+sits inside a variant. The format is NI-documented and version-sensitive, so the
+value here is a maintained Python decoder, not a new format: this library fills
+that gap with a zero-dependency, fully typed reader for the common documented types.
 
 ## License
 
