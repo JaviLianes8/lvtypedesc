@@ -5,7 +5,9 @@ from lvtypedesc import (
     Array,
     Boolean,
     Cluster,
+    FixedPoint,
     LVString,
+    Refnum,
     Scalar,
     TypeDescError,
     describe,
@@ -40,6 +42,28 @@ def test_string_is_variable_sized() -> None:
     node = parse_type_descriptor(td("0008 0030 FFFFFFFF"))
     assert isinstance(node, LVString)
     assert node.name == "String"
+    assert node.size == VARIABLE
+
+
+def test_string_keeps_a_fixed_size() -> None:
+    node = parse_type_descriptor(td("0008 0030 00000010"))
+    assert isinstance(node, LVString)
+    assert node.size == 0x10
+
+
+def test_fixed_point_keeps_its_raw_payload() -> None:
+    node = parse_type_descriptor(td("0008 005F 12345678"))
+    assert isinstance(node, FixedPoint)
+    assert node.name == "FXP"
+    assert node.payload == bytes.fromhex("12345678")
+
+
+def test_refnum_exposes_subtype_and_payload() -> None:
+    node = parse_type_descriptor(td("0006 0070 0001"))
+    assert isinstance(node, Refnum)
+    assert node.subtype == 1
+    assert node.payload == bytes.fromhex("0001")
+    assert describe(node) == "Refnum(subtype=0x01)"
 
 
 def test_one_dimensional_array_of_numerics() -> None:
