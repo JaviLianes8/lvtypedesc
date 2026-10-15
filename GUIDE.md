@@ -183,9 +183,9 @@ type names in messages are cut to 40 characters.
   that many bytes (through the buffer protocol; a non-contiguous `memoryview` is copied
   first) and is linear and bounded whatever follows the descriptor.
 - Trees: every function that takes a tree first adds up a lower bound of its encoded size
-  from lengths alone (at least 4 bytes per node, 4 per dimension or unit, 1 plus the length of each enum item
-  plus the name) and refuses a tree past 65535 bytes, counting a shared subtree once for
-  every place it appears. No descriptor can be larger, so this bounds the work and output
+  from lengths alone (at least 4 bytes per node, 4 per dimension or unit, 1 plus the length
+  of each enum item and of the name) and refuses a tree past 65535 bytes, counting a shared
+  subtree once for every place it appears. No descriptor can be larger, so this bounds the work and output
   of `describe` and `pretty` too.
 - Trees must not contain cycles (frozen nodes cannot form one without bypassing the
   dataclass); the nesting limit refuses them, but equality and hashing would recurse.
