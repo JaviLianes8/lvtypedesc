@@ -6,10 +6,11 @@ Exit codes: 0 done, 1 bad data (or the reader of the output went away), 2 bad us
 from __future__ import annotations
 
 import argparse
+import sys
 from collections.abc import Sequence
 
 from . import __version__
-from ._cli_io import MESSAGE_LIMIT, Parser, finish, write
+from ._cli_io import MESSAGE_LIMIT, Parser, finish, tolerant, write
 from ._codes import known_codes
 from ._describe import describe
 from ._errors import TypeDescError
@@ -75,6 +76,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     I32
     0
     """
+    tolerant(sys.stdout)
+    tolerant(sys.stderr)
     try:
         args = _build_parser().parse_args(argv)
     except SystemExit as stop:

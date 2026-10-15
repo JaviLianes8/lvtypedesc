@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from ._model import TypeDesc
 
 
-def _first_word(payload: bytes) -> int:
+def first_word(payload: bytes) -> int:
     return int.from_bytes(payload[:2], "big") if len(payload) >= 2 else 0
 
 
@@ -89,7 +89,7 @@ class Refnum(TypeDesc):
         >>> Refnum(0x70, "Refnum", payload=b"\\x00\\x02").subtype
         2
         """
-        return _first_word(self.payload)
+        return first_word(self.payload)
 
 
 @dataclass(frozen=True)
@@ -115,4 +115,4 @@ class Waveform(TypeDesc):
         >>> Waveform(0x54, "Waveform", payload=b"\\x00\\x06").subtype
         6
         """
-        return _first_word(self.payload)
+        return first_word(self.payload)

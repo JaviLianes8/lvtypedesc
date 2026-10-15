@@ -160,15 +160,17 @@ and `python -m lvtypedesc` works the same way. Whitespace in the hex is ignored.
 0 done, 1 bad data (the message goes to stderr, prefixed `lvtypedesc: error:`, cut to 300
 characters, never echoing the input), 2 bad usage (the usage message is cut to 300
 characters). When the reader of the output goes away
-(`lvtypedesc codes | head -1`), the command exits 1 without a traceback.
+(`lvtypedesc codes | head -1`), the command exits 1 without a traceback. Characters the
+console cannot show are written as escapes, and control characters in usage errors are
+escaped, so every message is one line.
 
 ## Errors
 
 | Exception | When |
 | --- | --- |
 | `TypeDescError` | the bytes are not a descriptor this library reads: truncated input, a length below 4, a descriptor running past its parent or the input, fields or a name running past their descriptor, an unknown code, a refused code (Void, ComplexFXP, Set, Map, Typedef), nesting deeper than `MAX_DEPTH` |
-| `TypeDescError` | a tree holds a value no descriptor can hold (`to_bytes`, `describe` and `pretty` alike): a code that does not fit the class, a `name` that is not the code's name, flags outside a byte, a size or dimension outside 32 bits, a count above 65535, text with a character above U+00FF or longer than 255 bytes, a unit outside 16 bits, a label on a node that keeps its name in `payload`; and, for `to_bytes` only, more than 65535 bytes in all |
-| `TypeError` | the argument is not bytes-like (`parse_type_descriptor`) or the tree is malformed: a field of the wrong type anywhere in it, or a bare `TypeDesc` instead of a node class (`to_bytes`, `describe`, `pretty`) |
+| `TypeDescError` | a tree holds a value no descriptor can hold (`to_bytes`, `describe` and `pretty` alike): a code that does not fit the class, a `name` that is not the code's name, flags outside a byte, a size or dimension outside 32 bits, a count above 65535, text with a character above U+00FF or longer than 255 bytes, a unit outside 16 bits, a label on a node that keeps its name in `payload`, more than 16384 nodes; and, for `to_bytes` only, more than 65535 bytes in all |
+| `TypeError` | the argument is not bytes-like (`parse_type_descriptor`) or the tree is malformed: a field that is not exactly `int`, `str`, `bytes` or `tuple` (subclasses are refused; a `TypeCode` member is accepted as a code), or a bare `TypeDesc` instead of a node class (`to_bytes`, `describe`, `pretty`); a released `memoryview` (`parse_type_descriptor`) |
 
 `TypeDescError` is a `ValueError`. Messages name offsets, codes and limits, never the input;
 type names in messages are cut to 40 characters.
@@ -178,7 +180,15 @@ type names in messages are cut to 40 characters.
 - Nesting: arrays and clusters up to `MAX_DEPTH` (64) levels, for reading and for every
   function that takes a tree, so a hostile descriptor cannot exhaust the stack.
 - Size: the 16-bit length word caps a descriptor at 65535 bytes, so parsing reads at most
-  that many bytes and is linear and bounded whatever follows the descriptor.
+  that many bytes (through the buffer protocol; a non-contiguous `memoryview` is copied
+  first) and is linear and bounded whatever follows the descriptor.
+- Nodes: a tree may hold at most 16384 nodes, counting a shared subtree once for every
+  place it appears; no descriptor can hold more. This bounds `describe` and `pretty` too.
+- Trees must not contain cycles (frozen nodes cannot form one without bypassing the
+  dataclass); the nesting limit refuses them, but equality and hashing would recurse.
+- `to_bytes` writes descriptors in their canonical, word-padded form, so a parsed
+  descriptor near the 65535-byte limit that held odd-length children may come out longer
+  than that and be refused.
 
 ## Not covered
 

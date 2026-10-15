@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ._check import check_tree
 from ._model import Array, Cluster, TypeDesc
-from ._nodes import LVEnum, PhysicalQuantity, Refnum, Waveform
+from ._nodes import LVEnum, PhysicalQuantity, Refnum, Waveform, first_word
 
 _BASES = ("rad", "sr", "s", "m", "kg", "A", "K", "mol", "cd")
 TIMESTAMP_SUBTYPE = 6
@@ -26,11 +26,11 @@ def leaf_text(node: TypeDesc) -> str | None:
     if isinstance(node, PhysicalQuantity):
         return f"{node.name} [{unit_text(node.units)}]"
     if isinstance(node, Waveform):
-        if node.subtype == TIMESTAMP_SUBTYPE:
+        if first_word(node.payload) == TIMESTAMP_SUBTYPE:
             return "Timestamp"
-        return f"Waveform(subtype=0x{node.subtype:02x})"
+        return f"Waveform(subtype=0x{first_word(node.payload):02x})"
     if isinstance(node, Refnum):
-        return f"Refnum(subtype=0x{node.subtype:02x})"
+        return f"Refnum(subtype=0x{first_word(node.payload):02x})"
     return None
 
 
@@ -51,7 +51,7 @@ def describe(node: TypeDesc) -> str:
 
 def _describe(node: TypeDesc) -> str:
     if isinstance(node, Array):
-        return f"{node.rank}D Array of {_describe(node.element)}"
+        return f"{len(node.dimensions)}D Array of {_describe(node.element)}"
     if isinstance(node, Cluster):
         inner = ", ".join(_describe(f) for f in node.fields)
         return f"Cluster {{ {inner} }}"

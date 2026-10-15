@@ -39,11 +39,24 @@ def parse_type_descriptor(data: bytes | bytearray | memoryview) -> TypeDesc:
     >>> describe(node), node.dimensions
     ('1D Array of DBL', (-1,))
     """
-    if not isinstance(data, (bytes, bytearray, memoryview)):
-        raise TypeError(f"expected bytes, bytearray or memoryview, not {type_name(data)}")
-    raw = bytes(data[:0xFFFF])  # no descriptor is longer, whatever follows it
+    raw = _snapshot(data)
     node, _ = _parse(raw, 0, len(raw), 1)
     return node
+
+
+def _snapshot(data: object) -> bytes:
+    """Copy at most the first 65535 bytes (no descriptor is longer) through the buffer
+    protocol, so a subclass cannot change what is read."""
+    if not isinstance(data, (bytes, bytearray, memoryview)):
+        raise TypeError(f"expected bytes, bytearray or memoryview, not {type_name(data)}")
+    try:
+        with memoryview(data) as view:
+            if view.c_contiguous:
+                with view.cast("B") as flat:
+                    return bytes(flat[:0xFFFF])
+            return view.tobytes()[:0xFFFF]
+    except ValueError:  # a released view
+        raise TypeError("expected readable bytes, the memoryview is released") from None
 
 
 def _parse(data: bytes, offset: int, limit: int, depth: int) -> tuple[TypeDesc, int]:

@@ -32,11 +32,14 @@ The public API is now stable: `parse_type_descriptor`, `to_bytes`, `describe`, `
 - `to_bytes`, `describe` and `pretty` run the same checks first: `TypeError` for a malformed
   tree or a bare `TypeDesc`, `TypeDescError` for a code that does not fit the node's class,
   a `name` that is not the code's name, or a value that does not fit its field. Structured
-  descriptors are padded to whole 16-bit words. Parsing reads at most 65535 bytes.
+  descriptors are padded to whole 16-bit words. Fields must hold exactly `int`, `str`,
+  `bytes` or `tuple`, and a tree may hold at most 16384 nodes (shared subtrees counted each
+  time). Parsing reads at most 65535 bytes through the buffer protocol.
 - `pretty` shows names and enum items; `describe` spells enums, units and time stamps.
 - Command line: `python -m lvtypedesc`; data errors are prefixed `lvtypedesc: error:`,
   bounded, and never echo the input; usage errors are cut to 300 characters (0.2.0 echoed a
-  whole unknown argument); a closed output exits 1 without a traceback.
+  whole unknown argument) and control characters in them escaped; characters the console
+  cannot show are escaped; a closed output exits 1 without a traceback.
 - README rewritten: the format is NI's published Type Descriptors page, not only
   community notes as 0.2.0 said. New GUIDE with an upgrade section.
 

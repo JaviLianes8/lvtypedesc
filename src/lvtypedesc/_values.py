@@ -78,7 +78,7 @@ def check_values(node: TypeDesc, wanted: Category) -> None:
     if isinstance(node, LVString):
         _size(node.size, "size")
     elif isinstance(node, Array):
-        _count(node.rank, "dimensions")
+        _count(len(node.dimensions), "dimensions")
         for dimension in node.dimensions:
             _size(dimension, "dimension")
     elif isinstance(node, Cluster):

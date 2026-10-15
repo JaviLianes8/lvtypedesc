@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import os
 import sys
 from typing import TYPE_CHECKING, NoReturn
@@ -12,6 +13,17 @@ if TYPE_CHECKING:
 
 # Usage and data error messages are cut here, so a huge argument is never echoed back.
 MESSAGE_LIMIT = 300
+
+
+def printable(text: str) -> str:
+    """Escape every character that is not printable, so a message stays on one line."""
+    return "".join(c if c.isprintable() else ascii(c)[1:-1] for c in text)
+
+
+def tolerant(stream: object) -> None:
+    """Make ``stream`` write characters its encoding lacks as escapes instead of failing."""
+    with contextlib.suppress(AttributeError, OSError, ValueError):
+        stream.reconfigure(errors="backslashreplace")  # type: ignore[attr-defined]
 
 
 def silence(stream: object) -> None:
@@ -57,6 +69,7 @@ class Parser(argparse.ArgumentParser):
     """An argument parser whose errors are bounded and survive a closed stderr."""
 
     def error(self, message: str) -> NoReturn:
+        message = printable(message)
         if len(message) > MESSAGE_LIMIT:
             message = message[:MESSAGE_LIMIT] + "..."
         self.exit(2, f"{self.format_usage()}{self.prog}: error: {message}\n")

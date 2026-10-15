@@ -10,7 +10,7 @@ from __future__ import annotations
 from ._check import check_tree
 from ._describe import leaf_text
 from ._model import VARIABLE, Array, Cluster, LVString, TypeDesc
-from ._nodes import FixedPoint, LVEnum, Refnum, Waveform
+from ._nodes import FixedPoint, LVEnum, Refnum, Waveform, first_word
 
 _STEP = "  "
 
@@ -36,7 +36,7 @@ def _dim(value: int) -> str:
 def _head(node: TypeDesc) -> str:
     if isinstance(node, Array):
         dims = ", ".join(_dim(d) for d in node.dimensions)
-        text = f"Array (rank {node.rank}, dims [{dims}])"
+        text = f"Array (rank {len(node.dimensions)}, dims [{dims}])"
     elif isinstance(node, Cluster):
         text = f"Cluster ({len(node.fields)} fields)"
     elif isinstance(node, LVString):
@@ -47,9 +47,9 @@ def _head(node: TypeDesc) -> str:
     elif isinstance(node, FixedPoint):
         text = f"FXP ({len(node.payload)}-byte payload)"
     elif isinstance(node, Refnum):
-        text = f"Refnum (subtype 0x{node.subtype:02x})"
+        text = f"Refnum (subtype 0x{first_word(node.payload):02x})"
     elif isinstance(node, Waveform) and leaf_text(node) != "Timestamp":
-        text = f"Waveform (subtype 0x{node.subtype:02x})"
+        text = f"Waveform (subtype 0x{first_word(node.payload):02x})"
     else:
         text = leaf_text(node) or node.name
     return text if node.label is None else f"{text} {node.label!r}"

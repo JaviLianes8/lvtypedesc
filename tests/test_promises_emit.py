@@ -169,4 +169,4 @@ def test_the_largest_descriptor_is_written() -> None:
 
 def test_a_tree_too_large_for_the_length_word_raises() -> None:
     with pytest.raises(TypeDescError, match="does not fit the 16-bit length"):
-        to_bytes(Cluster(0x50, "Cluster", fields=(I32,) * 20000))
+        to_bytes(Cluster(0x50, "Cluster", fields=(Scalar(0x03, "I32", label="abcd"),) * 8000))

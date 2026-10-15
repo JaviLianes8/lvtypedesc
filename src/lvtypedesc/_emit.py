@@ -50,7 +50,7 @@ def _body(node: TypeDesc) -> bytes:
         return _size(node.size)
     if isinstance(node, Array):
         dims = b"".join(_size(d) for d in node.dimensions)
-        return _u16(node.rank) + dims + _emit(node.element)
+        return _u16(len(node.dimensions)) + dims + _emit(node.element)
     if isinstance(node, Cluster):
         return _u16(len(node.fields)) + b"".join(_emit(f) for f in node.fields)
     if isinstance(node, LVEnum):
