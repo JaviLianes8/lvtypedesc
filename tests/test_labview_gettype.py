@@ -106,7 +106,9 @@ def test_named_examples_carry_their_names() -> None:
     assert _parse("enum_radio_named").label == "radio"
     assert _parse("array_fixed_3d").label == "gid"
     assert _parse("path_named").label == "path"
-    assert [f.label for f in _parse("cluster_named").fields] == ["n", "ok", None]
+    cluster = _parse("cluster_named")
+    assert isinstance(cluster, Cluster)
+    assert [f.label for f in cluster.fields] == ["n", "ok", None]
 
 
 @pytest.mark.parametrize("ident", _by_vi("TD_Create Cluster.vi"))
@@ -139,7 +141,7 @@ def test_arrays_labview_builds_are_what_to_bytes_writes(ident: str) -> None:
 
 def test_labview_names_built_descriptors_as_asked() -> None:
     names = {
-        key: parse_type_descriptor(_words(r.get("ClusterTD", r.get("NewArray"))[0])).label
+        key: parse_type_descriptor(_words((r.get("ClusterTD") or r["NewArray"])[0])).label
         for key, r in _RESULTS.items()
         if key.startswith("make_")
     }
