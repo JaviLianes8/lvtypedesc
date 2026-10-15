@@ -30,13 +30,16 @@ _WANTED = {
     "fields": "a tuple of TypeDesc",
     "element": "a TypeDesc",
     "node": "a TypeDesc",
-    "class": "a node class such as Scalar or Cluster",
 }
 
 
 def _check_node(node: TypeDesc) -> None:
     wanted = category(node)
-    _expect(wanted is not None, "class", node)
+    if wanted is None:
+        raise TypeError(
+            f"node must be an instance of a node class such as Scalar or Cluster, "
+            f"not {type_name(node)}"
+        )
     _expect(is_int(node.code), "code", node.code)
     _expect(is_int(node.flags), "flags", node.flags)
     _expect(isinstance(node.name, str), "name", node.name)
@@ -63,7 +66,6 @@ def _check_node(node: TypeDesc) -> None:
         _expect(ok, "units", units)
     elif isinstance(node, (FixedPoint, Refnum, Waveform)):
         _expect(isinstance(node.payload, bytes), "payload", node.payload)
-    assert wanted is not None
     check_values(node, wanted)
 
 

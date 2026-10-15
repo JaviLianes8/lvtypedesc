@@ -143,7 +143,10 @@ def test_values_that_do_not_fit_raise(function: object, tree: TypeDesc, message:
 @pytest.mark.parametrize("function", [to_bytes, describe, pretty])
 def test_the_bare_base_class_is_not_a_node(function: object) -> None:
     assert callable(function)
-    with pytest.raises(TypeError, match="must be a node class such as Scalar or Cluster"):
+    with pytest.raises(
+        TypeError,
+        match="^node must be an instance of a node class such as Scalar or Cluster, not TypeDesc$",
+    ):
         function(TypeDesc(0x03, "I32"))
 
 
