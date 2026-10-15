@@ -37,9 +37,10 @@ class TypeDesc:
     name), or None. ``flags`` is the high byte of the type-code word, which LabVIEW
     reserves; it is kept for exact re-emission and, as NI advises, ignored by equality.
 
-    >>> from lvtypedesc import Scalar
-    >>> Scalar(0x03, "I32", label="count") == Scalar(0x03, "I32", label="count", flags=0x40)
-    True
+    >>> from lvtypedesc import Scalar, TypeDesc
+    >>> node = Scalar(0x03, "I32", label="count")
+    >>> isinstance(node, TypeDesc), node == Scalar(0x03, "I32", label="count", flags=0x40)
+    (True, True)
     """
 
     code: int
@@ -76,8 +77,8 @@ class LVString(TypeDesc):
     (what LabVIEW writes), otherwise a fixed byte count.
 
     >>> from lvtypedesc import LVString, parse_type_descriptor
-    >>> parse_type_descriptor(bytes.fromhex("00080032FFFFFFFF")).name
-    'Path'
+    >>> parse_type_descriptor(bytes.fromhex("00080032FFFFFFFF")) == LVString(0x32, "Path")
+    True
     """
 
     size: int = VARIABLE
@@ -91,8 +92,8 @@ class Array(TypeDesc):
 
     >>> from lvtypedesc import Array, parse_type_descriptor
     >>> node = parse_type_descriptor(bytes.fromhex("00120040 0002 FFFFFFFF FFFFFFFF 00040021"))
-    >>> node.rank, node.element.name
-    (2, 'Boolean')
+    >>> isinstance(node, Array), node.rank, node.element.name
+    (True, 2, 'Boolean')
     """
 
     element: TypeDesc
@@ -113,10 +114,10 @@ class Array(TypeDesc):
 class Cluster(TypeDesc):
     """An ordered group of element types.
 
-    >>> from lvtypedesc import parse_type_descriptor
+    >>> from lvtypedesc import Cluster, parse_type_descriptor
     >>> node = parse_type_descriptor(bytes.fromhex("000E 0050 0002 0004 0002 0004 0007"))
-    >>> [f.name for f in node.fields]
-    ['I16', 'U32']
+    >>> isinstance(node, Cluster), [f.name for f in node.fields]
+    (True, ['I16', 'U32'])
     """
 
     fields: tuple[TypeDesc, ...] = ()

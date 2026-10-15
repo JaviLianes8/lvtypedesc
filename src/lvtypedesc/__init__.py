@@ -4,6 +4,15 @@
 >>> node = lvtypedesc.parse_type_descriptor(bytes.fromhex("0004 0003"))
 >>> lvtypedesc.describe(node), lvtypedesc.to_bytes(node).hex()
 ('I32', '00040003')
+
+``VARIABLE`` (-1) stands for a size the descriptor leaves open, and ``MAX_DEPTH`` (64) is
+the deepest nesting of arrays and clusters every function accepts:
+
+>>> from lvtypedesc import MAX_DEPTH, VARIABLE
+>>> lvtypedesc.parse_type_descriptor(bytes.fromhex("00080030FFFFFFFF")).size == VARIABLE
+True
+>>> MAX_DEPTH
+64
 """
 
 from __future__ import annotations

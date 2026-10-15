@@ -15,10 +15,10 @@ def _first_word(payload: bytes) -> int:
 class LVEnum(TypeDesc):
     """An enumerated integer (EnumU8, EnumU16 or EnumU32) and its item names.
 
-    >>> from lvtypedesc import parse_type_descriptor
+    >>> from lvtypedesc import LVEnum, parse_type_descriptor
     >>> data = bytes.fromhex("0016 0015 0003 0261 6D02 666D 0966 6D20 7374 6572 656F")
-    >>> parse_type_descriptor(data).items
-    ('am', 'fm', 'fm stereo')
+    >>> parse_type_descriptor(data) == LVEnum(0x15, "EnumU8", items=("am", "fm", "fm stereo"))
+    True
     """
 
     items: tuple[str, ...] = ()
@@ -31,9 +31,10 @@ class PhysicalQuantity(TypeDesc):
     The base indexes are LabVIEW's nine SI bases: 0 rad, 1 sr, 2 s, 3 m, 4 kg, 5 A,
     6 K, 7 mol, 8 cd.
 
-    >>> from lvtypedesc import parse_type_descriptor
-    >>> parse_type_descriptor(bytes.fromhex("000E 001A 0002 0002 FFFF 0003 0001")).units
-    ((2, -1), (3, 1))
+    >>> from lvtypedesc import PhysicalQuantity, parse_type_descriptor
+    >>> node = parse_type_descriptor(bytes.fromhex("000E 001A 0002 0002 FFFF 0003 0001"))
+    >>> isinstance(node, PhysicalQuantity), node.units
+    (True, ((2, -1), (3, 1)))
     """
 
     units: tuple[tuple[int, int], ...] = ()
@@ -43,9 +44,9 @@ class PhysicalQuantity(TypeDesc):
 class LVVariant(TypeDesc):
     """A LabVIEW variant. The descriptor says nothing about the value it will hold.
 
-    >>> from lvtypedesc import parse_type_descriptor
-    >>> parse_type_descriptor(bytes.fromhex("000C 4053 0756 6172 6961 6E74")).label
-    'Variant'
+    >>> from lvtypedesc import LVVariant, parse_type_descriptor
+    >>> parse_type_descriptor(bytes.fromhex("000C 4053 0756 6172 6961 6E74"))
+    LVVariant(code=83, name='Variant', label='Variant', flags=64)
     """
 
 
@@ -56,9 +57,9 @@ class FixedPoint(TypeDesc):
     Its layout is version-specific and not published, so every byte after the header
     (an appended name included) is kept verbatim in ``payload``; ``label`` stays None.
 
-    >>> from lvtypedesc import parse_type_descriptor
-    >>> parse_type_descriptor(bytes.fromhex("0008005F12345678")).payload.hex()
-    '12345678'
+    >>> from lvtypedesc import FixedPoint, parse_type_descriptor
+    >>> parse_type_descriptor(bytes.fromhex("0008005F41424344"))
+    FixedPoint(code=95, name='FXP', label=None, flags=0, payload=b'ABCD')
     """
 
     payload: bytes = b""

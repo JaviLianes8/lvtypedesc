@@ -1,6 +1,13 @@
 # lvtypedesc
 
-Parse LabVIEW type-descriptor byte strings into a readable, typed schema
+Parse LabVIEW type descriptors into a typed tree, render them, and write them back.
+
+A LabVIEW type descriptor is the short, length-prefixed block of words that says what a
+piece of flattened data is: an I32, a 2D array of Booleans, a cluster of named fields.
+LabVIEW's Variant To Flattened String returns one as its "type string", and you need it
+parsed before you can decode the data that goes with it. `lvtypedesc` reads that block into
+frozen dataclasses you can inspect, prints it as one line or as a tree, and writes a tree
+back to the exact bytes. Pure Python, no dependencies, fully typed.
 
 ## Install
 
@@ -8,106 +15,77 @@ Parse LabVIEW type-descriptor byte strings into a readable, typed schema
 pip install lvtypedesc
 ```
 
-A LabVIEW type descriptor is the small, length-prefixed block of type codes that
-precedes flattened LabVIEW data. This library turns that block into a typed tree
-you can inspect, which is the schema a generic unflatten needs.
+## Quick start
 
-## Usage
-
-```python
-from lvtypedesc import parse_type_descriptor, describe, pretty, to_bytes
-
-# A 1D array of clusters, each holding an I32 and a string.
-data = bytes.fromhex(
-    "001C 0040 0001 FFFFFFFF 0012 0050 0002 0004 0003 0008 0030 FFFFFFFF".replace(" ", "")
-)
-
-node = parse_type_descriptor(data)
-print(describe(node))  # 1D Array of Cluster { I32, String }
-print(node.rank)  # 1
-print(node.element.fields[0].name)  # I32
-print(to_bytes(node) == data)  # True, round-trips exactly
-print(pretty(node))
-# Array (rank 1, dims [variable])
-#   Cluster (2 fields)
-#     [0] I32
-#     [1] String (size variable)
-```
-
-The tree is built from frozen dataclasses: `Scalar`, `Boolean`, `LVString` (with
-`size`), `Array` (with `element` and `dimensions`), `Cluster` (with `fields`),
-`FixedPoint` and `Refnum`. A dimension or string whose size is not fixed in the
-descriptor uses the sentinel `VARIABLE`. Trailing bytes, such as the flattened
-data after the descriptor, are ignored. Truncated, unknown or out-of-scope input
-raises `TypeDescError`.
-
-`to_bytes` re-emits the canonical short-form descriptor for any node the library
-models, so `parse_type_descriptor` and `to_bytes` are inverses for the supported
-subset. `TypeCode` exposes the recognised codes by name and `known_codes()`
-returns the full table.
-
-## Command line
-
-Installing the package also installs a `lvtypedesc` console script:
+```pycon
+>>> from lvtypedesc import describe, parse_type_descriptor, pretty, to_bytes
+>>> data = bytes.fromhex(
+...     "002A 4040 0001 FFFFFFFF 001A 0050 0002 0006 4003 016E"
+...     " 000E 4030 FFFFFFFF 046E 616D 6500 0472 6F77 7300"
+... )
+>>> node = parse_type_descriptor(data)
+>>> describe(node)
+'1D Array of Cluster { I32, String }'
+>>> print(pretty(node))
+Array (rank 1, dims [variable]) 'rows'
+  Cluster (2 fields)
+    [0] I32 'n'
+    [1] String (size variable) 'name'
+>>> node.element.fields[1].label
+'name'
+>>> to_bytes(node) == data
+True
 
 ```
-$ lvtypedesc decode 00040003
-I32
+
+The tree is made of `Scalar`, `Boolean`, `LVString`, `Array`, `Cluster`, `LVEnum`,
+`PhysicalQuantity`, `LVVariant`, `FixedPoint`, `Refnum` and `Waveform` nodes. Element and
+control names travel in `label`. The command line does the same from a shell:
+
+```
 $ lvtypedesc decode 000E00400001FFFFFFFF0004000A
 1D Array of DBL
-$ lvtypedesc decode --tree 000E00500002000400030004000A
-Cluster (2 fields)
-  [0] I32
-  [1] DBL
-$ lvtypedesc codes          # list every recognised type code
-$ lvtypedesc --version
 ```
 
-Whitespace in the hex is ignored. Errors go to stderr with exit code 1. Run
-`lvtypedesc --help` for the full list of examples.
+The [guide](https://github.com/JaviLianes8/lvtypedesc/blob/main/GUIDE.md) covers every
+node, the command line, errors and limits; the
+[changelog](https://github.com/JaviLianes8/lvtypedesc/blob/main/CHANGELOG.md) lists what
+changed in 1.0.0.
 
-## Supported subset
+## What it reads, and how it was checked
 
-Fully parsed: the numeric scalars (`I8` to `U64`, `SGL`, `DBL`, `EXT` and the
-complex variants), booleans, strings, paths, pictures, n-dimensional arrays and
-clusters, nested to any depth. Fixed-point (`FXP`) and refnum descriptors are
-recognised and their type-specific bytes preserved, but their internal layout is
-not interpreted (see provenance below).
+The format is the one NI documents on its
+[Type Descriptors](https://www.ni.com/docs/en-US/bundle/labview/page/type-descriptors.html)
+page for Variant To Flattened String: a 16-bit length, a 16-bit type-code word whose low
+byte is the type, type-specific fields, and an optional name. Supported: every numeric
+type, enums, numbers with units, Booleans, strings, paths, pictures, arrays and clusters
+nested to 64 levels, variants, and element names. Fixed-point numbers, refnums and
+waveform types (time stamps among them) are recognised and their bytes kept verbatim,
+because their layout is version-specific. Typedefs, sets, maps and void are refused with a
+named error.
 
-Not covered, and reported with a clear error: enums, variants and waveforms,
-whose payloads are not documented well enough to parse honestly.
+The parser is tested against what LabVIEW 2026 itself wrote and read on a real machine:
+the descriptors in front-panel datalog files of sixteen shipped VIs (error clusters,
+paths, enums, refnums, time stamps, fixed-point numbers, 1D and 2D arrays, variants),
+which it reads and writes back byte for byte, and the answers of LabVIEW's own
+type-descriptor VIs (`vi.lib/Utility/GetType.llb`) on arrays, clusters, enums, units,
+strings and refnums, and the descriptors those VIs build.
 
-## Provenance (please read)
-
-The type-descriptor code table used here is **community reverse-engineering**,
-documented at the [LabVIEW wiki](https://labviewwiki.org/wiki/Type_descriptor).
-It is consistent with the fragments NI has published but it is **not** an
-official, byte-exact NI specification. Two further caveats:
-
-- Codes can change between LabVIEW versions, so treat them as the common
-  documented set rather than a guarantee for every build.
-- The in-memory 16-bit-word form and the flattened byte form can differ. This
-  library parses the flattened byte form.
-
-Because of this, anything that cannot be verified is treated as provisional:
-unknown codes raise an honest error instead of a guess, and the fixed-point and
-refnum payloads are kept as raw bytes rather than invented into fields. The
-refnum `subtype` word is surfaced best-effort and is itself provisional.
+LabVIEW also stores types as a flat list where arrays and clusters point at their elements
+by index (datalog files, flattened variants with attributes, VI files). This library reads
+the nested form; NI's page describes both.
 
 ## Why
 
-LabVIEW ships flattened data with a leading type descriptor, and decoding it in
-Python needs that descriptor parsed into a schema first. OpenG's Variant Data
-Library parses descriptors inside LabVIEW, but it is LabVIEW VIs, not Python. The
-existing PyPI packages read LabVIEW source files instead: `pylabview` and `lvkit`
-parse the `.vi` binary, `pylavi` validates VI files. None of them exposes a parser
-for the raw runtime type-descriptor byte string that precedes flattened data or
-sits inside a variant. This library fills that gap with a zero-dependency, fully
-typed reader for the common documented types.
+The LabVIEW packages on PyPI work on LabVIEW source files: `pylabview` and `pylavi`
+describe themselves as LabVIEW file parsers and `lvkit` converts VIs to Python (as listed
+on PyPI on 2026-10-15). None offers a small reader and writer for the type string itself.
+OpenG's LabVIEW Data Tools parse it inside LabVIEW, as VIs. `lvtypedesc` is that reader
+for Python: one function in, one function out, a tree you can type-check against.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/JaviLianes8/lvtypedesc/blob/main/LICENSE).
 
 ## Links
 

@@ -6,6 +6,37 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-15
+
+The public API is now stable: `parse_type_descriptor`, `to_bytes`, `describe`, `pretty`,
+`known_codes`, the node classes, `TypeCode`, `Category`, `TypeDescError`, `VARIABLE` and
+`MAX_DEPTH` keep their names, signatures and behaviour across 1.x.
+
+- Checked against LabVIEW 2026: the descriptors of sixteen shipped VIs, read from the
+  front-panel datalog files LabVIEW wrote, parse and are written back byte for byte, and
+  LabVIEW's own type-descriptor VIs read every test descriptor the way this library does.
+- Names: bit `0x40` of the type-code word announces an appended name, now read into the
+  new `label` field and written back by `to_bytes`. The reserved high byte is kept in the
+  new `flags` field, written back and left out of equality.
+- New nodes: `LVEnum` (EnumU8, EnumU16, EnumU32, with `items`), `PhysicalQuantity`
+  (numbers with units, with `units`), `LVVariant` and `Waveform` (time stamps and other
+  waveform types, bytes kept verbatim). `TypeCode`, `Category` and `known_codes()` grow
+  with them. Void, ComplexFXP, Set, Map and Typedef are refused by name.
+- `Refnum.subtype` is now a property read from `payload` instead of a constructor field.
+- Stricter reading: a descriptor that runs past its parent, a string descriptor without its
+  size word, or a name that runs past its descriptor raises `TypeDescError`. Nesting is
+  limited to `MAX_DEPTH` (64) levels instead of failing with `RecursionError`. Input that is
+  not bytes-like raises `TypeError`; `memoryview` is accepted.
+- `to_bytes`, `describe` and `pretty` check the tree first: `TypeError` for a malformed
+  tree, `TypeDescError` for a code that does not fit the node's class or a value that does
+  not fit its field. Structured descriptors are padded to whole 16-bit words.
+- `pretty` shows names and enum items; `describe` spells enums, units and time stamps.
+- Command line: `python -m lvtypedesc`; usage errors return exit code 2 from `main`; data
+  errors are prefixed `lvtypedesc: error:`, bounded, and never echo the input; a closed
+  output exits 1 without a traceback.
+- README rewritten: the format is NI's published Type Descriptors page, not only
+  community notes as 0.2.0 said. New GUIDE with an upgrade section.
+
 ## [0.2.0]
 
 - Command-line interface: a `lvtypedesc` console script with `decode` (optional
