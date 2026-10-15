@@ -1,0 +1,16 @@
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\VariantDataType\GetTypeInfo.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\VariantDataType\GetClusterInfo.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\VariantDataType\GetArrayInfo.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\VariantDataType\GetNumericFxpInfo.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\VariantDataType\GetRefnumInfo.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\VariantDataType\GetStringInfo.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\VariantDataType\GetNumericInfo.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\VariantDataType\GetWaveformInfo.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\error.llb\Error Cluster From Error Code.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\error.llb\Find First Error.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\file.llb\Is Path and Not Empty.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\file.llb\cfis_Split File Path Into Three Parts.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\file.llb\Set Refnum Access and Modification Time.vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\file.llb\Read File+ [I16].vi
+C:\Program Files\National Instruments\LabVIEW 2026\vi.lib\Utility\sysdir.llb\Get System Directory.vi
+C:\Program Files\National Instruments\LabVIEW 2026\examples\Numerics\Fixed-Point Cast.vi

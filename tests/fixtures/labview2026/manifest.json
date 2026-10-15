@@ -1,0 +1,108 @@
+{
+ "labview": "LabVIEW 2026 Community 26.3.1f1 (Windows x64)",
+ "method": "VIs shipped with LabVIEW run unmodified through LabVIEW's ActiveX VI Server by scripts/capture-labview-datalogs.ps1 and scripts/capture-labview-gettype.ps1; every VI hashed before and after; files copied unchanged",
+ "files": {
+  "Error_Cluster_From_Error_Code.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 936,
+   "sha256": "9ea501c4ffc3e6d7e31af32fa2e1824e71ee4d349d45cd175a25815cfb948930"
+  },
+  "Find_First_Error.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 773,
+   "sha256": "3943ffa6e0eae792a1f7e629b455d587ccc248ddaa95316d662d7f85f50809bc"
+  },
+  "Fixed_Point_Cast.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 520,
+   "sha256": "4e8d675bd556d94f859e744974cd2167c24f9bcb65c35eb2494ad2b4bddbbb26"
+  },
+  "GetArrayInfo.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 1003,
+   "sha256": "754700f8218c274e70b5b219997742c89e2f9335a7c4c94378ab412218d889c9"
+  },
+  "GetClusterInfo.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 809,
+   "sha256": "f9ea1fe234139f5ddbe1f1827e9dde370685d9fd363146a786a683b64102e579"
+  },
+  "GetNumericFxpInfo.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 1113,
+   "sha256": "49559f62369f44dfac17820f2119fcbe1c992016a50b6188c33e68fcd56c5df7"
+  },
+  "GetNumericInfo.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 1303,
+   "sha256": "baaf8bca9ddbdc70651b4c4cae4234b05b08e624d7d0efdc0e826eb6ffe01da7"
+  },
+  "GetRefnumInfo.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 5432,
+   "sha256": "c785a4c09214b96633ea0a486aaff47ba8a1002e21a4c7b459bd7ef324f7cbb8"
+  },
+  "GetStringInfo.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 924,
+   "sha256": "d50e36fad4dc0904da70a69a018bb5a2cc7e4473b9d8e74fea4b7abe2a59a929"
+  },
+  "GetTypeInfo.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 1425,
+   "sha256": "fe248c723079974f9975241ca7d037b1e595f69d43ae1647d04b3480087923b2"
+  },
+  "GetWaveformInfo.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 798,
+   "sha256": "26632fd5e812ab0323b6350381ac91b26ebb302e1749542fb0abfaee76f4ca63"
+  },
+  "Get_System_Directory.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 743,
+   "sha256": "0dc6cd814ac26805f357a8de64ec07ddf8906d304fe5efb660e748b57da1f77c"
+  },
+  "Is_Path_and_Not_Empty.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 635,
+   "sha256": "f8c7ed3f4b0ec12993e8174598f93b1319bc7771fb04ef1dad1252c3a099bb4d"
+  },
+  "Read_File_I16.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 1032,
+   "sha256": "0cafcd2b6f958bb703041f0a860e5fd38b41456e388cf7cec594de056c33ad0e"
+  },
+  "Set_Refnum_Access_and_Modification_Time.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 938,
+   "sha256": "e96a497325b348a43aa679debbb3deb7fcadd146b81c5508ef58341570458ec9"
+  },
+  "cfis_Split_File_Path_Into_Three_Parts.dat": {
+   "captured": "2026-10-15",
+   "how": "front-panel datalog written by LabVIEW at the end of one run of the VI of the same name (scripts/labview-datalog-vis.txt); the type descriptor table comes first",
+   "size": 712,
+   "sha256": "0ce8b65c96bb1e1032cc079e91ab631b652bf71d8d1e93a534b334bb430d7490"
+  },
+  "gettype.json": {
+   "captured": "2026-10-15",
+   "how": "answers of LabVIEW's own vi.lib/Utility/GetType.llb VIs to hand-written descriptors (scripts/make_gettype_jobs.py)",
+   "size": 7262,
+   "sha256": "fe0c27e6f5b45946511d7ce9e0d618849e0f5b58a105a2b96752925a2a29c62b"
+  }
+ }
+}
