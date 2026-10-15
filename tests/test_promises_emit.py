@@ -112,9 +112,9 @@ def test_a_code_must_fit_the_class(tree: TypeDesc) -> None:
         (LVString(0x30, "String", size=-2), "size must be VARIABLE or 0 to 4294967294"),
         (LVString(0x30, "String", size=0xFFFFFFFF), "size must be VARIABLE"),
         (Array(0x40, "Array", element=I32, dimensions=(2**32,)), "dimension must be"),
-        (Array(0x40, "Array", element=I32, dimensions=(0,) * 65536), "65536 dimensions do not"),
-        (Cluster(0x50, "Cluster", fields=(I32,) * 65536), "65536 fields do not fit"),
-        (LVEnum(0x15, "EnumU8", items=("",) * 65536), "65536 items do not fit"),
+        (Array(0x40, "Array", element=I32, dimensions=(0,) * 65536), "needs more than 65535 bytes"),
+        (Cluster(0x50, "Cluster", fields=(I32,) * 65536), "needs more than 65535 bytes"),
+        (LVEnum(0x15, "EnumU8", items=("",) * 65536), "needs more than 65535 bytes"),
         (LVEnum(0x15, "EnumU8", items=("x" * 256,)), "item of 256 bytes is longer than 255"),
         (LVEnum(0x15, "EnumU8", items=("€",)), "item holds a character outside Latin-1"),
         (Scalar(0x03, "I32", label="€"), "label holds a character outside Latin-1"),
@@ -122,20 +122,16 @@ def test_a_code_must_fit_the_class(tree: TypeDesc) -> None:
         (PhysicalQuantity(0x19, "SGLUnit", units=((65536, 0),)), "unit base must be"),
         (PhysicalQuantity(0x19, "SGLUnit", units=((0, 32768),)), "exponent -32768 to 32767"),
         (PhysicalQuantity(0x19, "SGLUnit", units=((0, -32769),)), "exponent -32768 to 32767"),
-        (PhysicalQuantity(0x19, "SGLUnit", units=((0, 0),) * 65536), "65536 units do not"),
+        (PhysicalQuantity(0x19, "SGLUnit", units=((0, 0),) * 65536), "needs more than 65535 bytes"),
         (FixedPoint(0x5F, "FXP", label="x"), "a FixedPoint keeps its name inside payload"),
         (Refnum(0x70, "Refnum", label="x"), "a Refnum keeps its name inside payload"),
         (Waveform(0x54, "Waveform", label="x"), "a Waveform keeps its name inside payload"),
-        (FixedPoint(0x5F, "FXP", payload=b"\x00" * 65532), "65536 bytes does not fit"),
+        (FixedPoint(0x5F, "FXP", payload=b"\x00" * 65532), "does not fit the 16-bit length"),
     ],
 )
 @pytest.mark.parametrize("function", [to_bytes, describe, pretty])
 def test_values_that_do_not_fit_raise(function: object, tree: TypeDesc, message: str) -> None:
     assert callable(function)
-    big_only = "bytes does not fit" in message  # only writing knows the total length
-    if big_only and function is not to_bytes:
-        function(tree)
-        return
     with pytest.raises(TypeDescError, match=message):
         function(tree)
 

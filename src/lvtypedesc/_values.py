@@ -47,11 +47,6 @@ def pstr(text: str, what: str) -> bytes:
     return bytes((len(raw),)) + raw
 
 
-def _count(value: int, what: str) -> None:
-    if value > 0xFFFF:
-        raise TypeDescError(f"{value} {what} do not fit the 16-bit count")
-
-
 def _size(value: int, what: str) -> None:
     if value != VARIABLE and not 0 <= value < U32_VARIABLE:
         raise TypeDescError(f"{what} must be VARIABLE or 0 to {U32_VARIABLE - 1}")
@@ -78,17 +73,12 @@ def check_values(node: TypeDesc, wanted: Category) -> None:
     if isinstance(node, LVString):
         _size(node.size, "size")
     elif isinstance(node, Array):
-        _count(len(node.dimensions), "dimensions")
         for dimension in node.dimensions:
             _size(dimension, "dimension")
-    elif isinstance(node, Cluster):
-        _count(len(node.fields), "fields")
     elif isinstance(node, LVEnum):
-        _count(len(node.items), "items")
         for item in node.items:
             pstr(item, "item")
     elif isinstance(node, PhysicalQuantity):
-        _count(len(node.units), "units")
         for base, exponent in node.units:
             if not 0 <= base <= 0xFFFF or not -0x8000 <= exponent <= 0x7FFF:
                 raise TypeDescError("unit base must be 0 to 65535 and exponent -32768 to 32767")
