@@ -110,7 +110,10 @@ TABLE: dict[int, tuple[Category, str]] = {
 # Codes LabVIEW uses whose layout is not documented or not consistent enough to parse
 # honestly: the parser refuses them by name instead of with a bare "unknown code".
 UNSUPPORTED_NAMES: dict[int, str] = {
-    0x18: "EnumU64",
+    0x00: "Void",
+    0x5E: "ComplexFXP",
+    0x73: "Set",
+    0x74: "Map",
     0xF1: "Typedef",
 }
 

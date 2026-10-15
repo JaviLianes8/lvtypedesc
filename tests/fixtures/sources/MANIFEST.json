@@ -1,0 +1,21 @@
+{
+  "note": "public references fetched for the source tests",
+  "files": [
+    {
+      "file": "ni-type-descriptors.json",
+      "url": "https://docs-be.ni.com/api/bundle/labview/page/type-descriptors.html",
+      "fetched": "2026-10-15",
+      "size": 58390,
+      "sha256": "41405bf14e3959517a7e70826b45da5347c206b0180774a9c3b79c6195b9a681",
+      "licence": "NI documentation, copyright NI; local copy only"
+    },
+    {
+      "file": "labviewwiki-type-descriptor.html",
+      "url": "https://labviewwiki.org/wiki/Type_descriptor",
+      "fetched": "2026-10-15",
+      "size": 38248,
+      "sha256": "6bb72880fdd4527acf35a33b823bb2c7e53cc5dff472264d14c179ff562619fa",
+      "licence": "LabVIEW Wiki page, its own licence; local copy only"
+    }
+  ]
+}
