@@ -20,10 +20,22 @@ if (-not $token) {
     throw "No PyPI token. Set `$env:PYPI_TOKEN or save it to C:\secrets\pypi-token.txt (never commit it)."
 }
 
+# Build from a clean clone of the committed HEAD, never from the working tree, so local
+# line endings or stray files cannot reach the archives. Native tools do not obey
+# $ErrorActionPreference, so every exit code is checked.
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("lvtypedesc-release-" + [guid]::NewGuid())
+git clone --quiet . $work
+if ($LASTEXITCODE) { throw "git clone failed" }
 Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue
-python -m build
-python -m twine check dist/*
+python -m build --outdir dist $work
+if ($LASTEXITCODE) { throw "build failed" }
+python -m twine check --strict dist/*
+if ($LASTEXITCODE) { throw "twine check failed" }
+Remove-Item -Recurse -Force $work
 
 $env:TWINE_USERNAME = "__token__"
 $env:TWINE_PASSWORD = $token
-try { python -m twine upload dist/* } finally { Remove-Item Env:\TWINE_PASSWORD -ErrorAction SilentlyContinue }
+try {
+    python -m twine upload dist/*
+    if ($LASTEXITCODE) { throw "upload failed" }
+} finally { Remove-Item Env:\TWINE_PASSWORD -ErrorAction SilentlyContinue }

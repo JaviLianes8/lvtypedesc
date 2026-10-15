@@ -27,7 +27,8 @@ The public API is now stable: `parse_type_descriptor`, `to_bytes`, `describe`, `
   `payload` of `Refnum` and `Waveform` is keyword-only.
 - Stricter reading: a descriptor that runs past its parent, a string descriptor without its
   size word, or a name that runs past its descriptor raises `TypeDescError`. Nesting is
-  limited to `MAX_DEPTH` (64) levels instead of failing with `RecursionError`. Input that is
+  limited to `MAX_DEPTH` (64) levels (0.2.0 read a few hundred and then failed with
+  `RecursionError`). Input that is
   not bytes-like raises `TypeError`; `memoryview` is accepted.
 - `to_bytes`, `describe` and `pretty` run the same checks first: `TypeError` for a malformed
   tree or a bare `TypeDesc`, `TypeDescError` for a code that does not fit the node's class,

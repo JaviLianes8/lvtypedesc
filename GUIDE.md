@@ -218,7 +218,11 @@ type names in messages are cut to 40 characters.
 - A descriptor that runs past its parent, or a string descriptor without its size word, now
   raises `TypeDescError` (0.2 read on into the next bytes, or assumed a variable size).
 - Input that is not bytes-like raises `TypeError` (0.2: `TypeDescError`); `memoryview` is
-  accepted. Nesting deeper than 64 levels raises `TypeDescError` (0.2: `RecursionError`).
+  accepted. Nesting deeper than 64 levels raises `TypeDescError`; 0.2 read a few hundred
+  levels and then failed with `RecursionError`, so a descriptor nested 65 to about 300 deep
+  that 0.2 read is now refused.
+- `to_bytes` of a bare `TypeDesc` or of a malformed tree raises `TypeError` (0.2:
+  `TypeDescError` for a bare `TypeDesc`).
 - `to_bytes` checks the tree first and pads structured descriptors to whole words;
   `describe` and `pretty` run the same checks, so all three accept the same trees (except
   that `to_bytes` also refuses a tree that passes 65535 bytes only once padded). A node's
