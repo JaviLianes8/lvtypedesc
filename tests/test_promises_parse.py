@@ -69,9 +69,14 @@ def test_bit_0x40_with_nothing_after_the_fields_means_no_name() -> None:
     assert (node.label, node.flags) == (None, 0x40)
 
 
-def test_a_name_running_past_its_descriptor_raises() -> None:
-    with pytest.raises(TypeDescError, match="name of the descriptor at offset 0 runs past it"):
-        parse_type_descriptor(td("0006 4003 0561"))
+@pytest.mark.parametrize("data", ["0006 4003 0561", "0006 4003 0261", "0008 4003 0461 6263"])
+def test_a_name_running_past_its_descriptor_raises(data: str) -> None:
+    with pytest.raises(TypeDescError, match=r"^name of the descriptor at offset 0 runs past it$"):
+        parse_type_descriptor(td(data))
+
+
+def test_a_name_that_ends_exactly_at_the_end_is_read() -> None:
+    assert parse_type_descriptor(td("0007 4003 0261 62")).label == "ab"
 
 
 def test_names_are_latin_1() -> None:

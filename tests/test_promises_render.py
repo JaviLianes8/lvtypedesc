@@ -168,3 +168,9 @@ def test_nodes_are_frozen_hashable_picklable_and_ignore_flags_in_equality() -> N
     assert node != dataclasses.replace(node, label=None)
     assert pickle.loads(pickle.dumps(node)) == node
     assert Refnum(0x70, "Refnum").subtype == 0 and Waveform(0x54, "Waveform").subtype == 0
+
+
+def test_a_rank_zero_array_reads_as_such() -> None:
+    tree = Array(0x40, "Array", element=Scalar(0x03, "I32"))
+    assert describe(tree) == "0D Array of I32"
+    assert pretty(tree) == "Array (rank 0, dims [])\n  I32"
