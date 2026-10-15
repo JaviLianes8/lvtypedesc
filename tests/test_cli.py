@@ -26,6 +26,7 @@ def test_decode_bad_hex_errors_to_stderr(capsys: pytest.CaptureFixture[str]) -> 
     captured = capsys.readouterr()
     assert captured.out == ""
     assert "not valid hex" in captured.err
+    assert "zzzz" not in captured.err
 
 
 def test_decode_unknown_code_errors_to_stderr(capsys: pytest.CaptureFixture[str]) -> None:
@@ -43,7 +44,6 @@ def test_codes_lists_known_codes(capsys: pytest.CaptureFixture[str]) -> None:
     assert "0x5F  FXP" in out
 
 
-def test_no_command_is_an_error() -> None:
-    with pytest.raises(SystemExit) as exc:
-        main([])
-    assert exc.value.code == 2
+def test_no_command_is_a_usage_error(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main([]) == 2
+    assert "usage: lvtypedesc" in capsys.readouterr().err

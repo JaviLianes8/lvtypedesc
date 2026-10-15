@@ -51,5 +51,5 @@ def test_to_bytes_refuses_a_tree_too_large_for_the_short_form() -> None:
     from lvtypedesc import Cluster
 
     big = Cluster(0x50, "Cluster", fields=tuple(huge for _ in range(20000)))
-    with pytest.raises(TypeDescError, match="too large"):
+    with pytest.raises(TypeDescError, match="does not fit the 16-bit length"):
         to_bytes(big)
