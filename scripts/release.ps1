@@ -1,15 +1,16 @@
 # Build and upload to PyPI. Run scripts/check.ps1 first.
-# The name must not already exist on PyPI; the token is read from a secret store, never git.
+# The version must not already be on PyPI; the token is read from a secret store, never git.
 $ErrorActionPreference = "Stop"
 
-# Works on both Windows PowerShell 5.1 and pwsh 7 (generic catch, no PS7-only types).
-$taken = $true
+# Refuse to upload a version that is already on PyPI (works on Windows PowerShell 5.1 and pwsh 7).
+$version = (Select-String -Path pyproject.toml -Pattern '^version = "(.+)"').Matches[0].Groups[1].Value
+$published = $true
 try {
-    Invoke-WebRequest -UseBasicParsing "https://pypi.org/pypi/lvtypedesc/json" | Out-Null
+    Invoke-WebRequest -UseBasicParsing "https://pypi.org/pypi/lvtypedesc/$version/json" | Out-Null
 } catch {
-    if ($_.Exception.Response.StatusCode.value__ -eq 404) { $taken = $false } else { throw }
+    if ($_.Exception.Response.StatusCode.value__ -eq 404) { $published = $false } else { throw }
 }
-if ($taken) { throw "The name 'lvtypedesc' already exists on PyPI. Choose another before publishing." }
+if ($published) { throw "lvtypedesc $version is already on PyPI. Bump the version first." }
 
 $token = $env:PYPI_TOKEN
 if (-not $token -and (Test-Path "C:\secrets\pypi-token.txt")) {
