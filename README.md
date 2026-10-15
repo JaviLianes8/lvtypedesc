@@ -67,9 +67,10 @@ named error.
 The parser is tested against what LabVIEW 2026 itself wrote and read on a real machine:
 the descriptors in front-panel datalog files of sixteen shipped VIs (error clusters,
 paths, enums, refnums, time stamps, fixed-point numbers, 1D and 2D arrays, variants),
-which it reads and writes back byte for byte, and the answers of LabVIEW's own
+whose single-type entries it reads and writes back byte for byte (arrays and clusters are
+rebuilt in the nested form for the tests), and the answers of LabVIEW's own
 type-descriptor VIs (`vi.lib/Utility/GetType.llb`) on arrays, clusters, enums, units,
-strings and refnums, and the descriptors those VIs build.
+strings and refnums, and the nested descriptors those VIs build.
 
 LabVIEW also stores types as a flat list where arrays and clusters point at their elements
 by index (datalog files, flattened variants with attributes, VI files). This library reads

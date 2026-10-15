@@ -19,6 +19,7 @@ from lvtypedesc import (
     TypeDescError,
     Waveform,
     parse_type_descriptor,
+    to_bytes,
 )
 
 
@@ -176,3 +177,18 @@ def test_unknown_codes_report_where_they_are() -> None:
 def test_short_or_impossible_headers_raise(data: str) -> None:
     with pytest.raises(TypeDescError):
         parse_type_descriptor(td(data))
+
+
+def test_bytes_left_after_the_fields_and_name_are_ignored() -> None:
+    node = parse_type_descriptor(td("0008 4003 0161 7A7A"))
+    assert node.label == "a"
+    assert to_bytes(node) == td("0006 4003 0161")
+    enum = parse_type_descriptor(td("000A 0015 0001 0161 7A7A"))
+    assert to_bytes(enum) == td("0008 0015 0001 0161")
+
+
+def test_names_map_each_byte_to_one_character() -> None:
+    node = parse_type_descriptor(td("0008 4003 02E9 8000"))
+    assert node.label == "\u00e9\x80"
+    assert node.label.encode("latin-1").decode("cp1252") == "\u00e9\u20ac"
+    assert to_bytes(node) == td("0008 4003 02E9 8000")

@@ -69,8 +69,15 @@ versions, so every byte after their header is kept in `payload`, a name included
 
 ## Names
 
-A name is a Pascal string (a length byte, then Latin-1 text) at the next even offset after
-the fields, padded to a whole word. It is LabVIEW's control or cluster element name.
+A name is a Pascal string (a length byte, then the text) at the next even offset after the
+fields, padded to a whole word. It is LabVIEW's control or cluster element name. LabVIEW
+writes names and enum items in the system code page (Windows-1252 on a Western Windows);
+this library maps each byte to one character (Latin-1), so every byte survives a round
+trip. To read text such as `€` (byte `0x80`), re-decode it:
+`label.encode("latin-1").decode("cp1252")`, and encode the other way before writing.
+
+Bytes left inside a descriptor after its fields and name (other than the padding byte)
+are ignored and are not written back; `to_bytes` always writes the canonical form.
 
 ```pycon
 >>> error_out = parse_type_descriptor(
@@ -160,7 +167,7 @@ characters). When the reader of the output goes away
 | Exception | When |
 | --- | --- |
 | `TypeDescError` | the bytes are not a descriptor this library reads: truncated input, a length below 4, a descriptor running past its parent or the input, fields or a name running past their descriptor, an unknown code, a refused code (Void, ComplexFXP, Set, Map, Typedef), nesting deeper than `MAX_DEPTH` |
-| `TypeDescError` | a tree holds a value no descriptor can hold (`to_bytes`, `describe` and `pretty` alike): a code that does not fit the class, a `name` that is not the code's name, flags outside a byte, a size or dimension outside 32 bits, a count above 65535, text outside Latin-1 or longer than 255 bytes, a unit outside 16 bits, a label on a node that keeps its name in `payload`; and, for `to_bytes` only, more than 65535 bytes in all |
+| `TypeDescError` | a tree holds a value no descriptor can hold (`to_bytes`, `describe` and `pretty` alike): a code that does not fit the class, a `name` that is not the code's name, flags outside a byte, a size or dimension outside 32 bits, a count above 65535, text with a character above U+00FF or longer than 255 bytes, a unit outside 16 bits, a label on a node that keeps its name in `payload`; and, for `to_bytes` only, more than 65535 bytes in all |
 | `TypeError` | the argument is not bytes-like (`parse_type_descriptor`) or the tree is malformed: a field of the wrong type anywhere in it, or a bare `TypeDesc` instead of a node class (`to_bytes`, `describe`, `pretty`) |
 
 `TypeDescError` is a `ValueError`. Messages name offsets, codes and limits, never the input;
