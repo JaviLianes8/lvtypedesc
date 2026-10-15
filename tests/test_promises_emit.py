@@ -145,7 +145,7 @@ def test_the_bare_base_class_is_not_a_node(function: object) -> None:
     assert callable(function)
     with pytest.raises(
         TypeError,
-        match="^node must be an instance of a node class such as Scalar or Cluster, not TypeDesc$",
+        match=r"^node must be an instance of a node class such as Scalar or Cluster, not TypeDesc$",
     ):
         function(TypeDesc(0x03, "I32"))
 
