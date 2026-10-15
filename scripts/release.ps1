@@ -24,14 +24,17 @@ if (-not $token) {
 # line endings or stray files cannot reach the archives. Native tools do not obey
 # $ErrorActionPreference, so every exit code is checked.
 $work = Join-Path ([System.IO.Path]::GetTempPath()) ("lvtypedesc-release-" + [guid]::NewGuid())
-git clone --quiet . $work
-if ($LASTEXITCODE) { throw "git clone failed" }
-Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue
-python -m build --outdir dist $work
-if ($LASTEXITCODE) { throw "build failed" }
-python -m twine check --strict dist/*
-if ($LASTEXITCODE) { throw "twine check failed" }
-Remove-Item -Recurse -Force $work
+try {
+    git clone --quiet . $work
+    if ($LASTEXITCODE) { throw "git clone failed" }
+    Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue
+    python -m build --outdir dist $work
+    if ($LASTEXITCODE) { throw "build failed" }
+    python -m twine check --strict dist/*
+    if ($LASTEXITCODE) { throw "twine check failed" }
+} finally {
+    Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
+}
 
 $env:TWINE_USERNAME = "__token__"
 $env:TWINE_PASSWORD = $token
