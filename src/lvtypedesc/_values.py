@@ -1,7 +1,7 @@
 """Check that the values in one node fit the descriptor fields that hold them.
 
 Every function that takes a tree runs these checks, so ``to_bytes``, ``describe`` and
-``pretty`` accept exactly the same trees.
+``pretty`` accept the same trees (only ``to_bytes`` knows the padded total).
 """
 
 from __future__ import annotations

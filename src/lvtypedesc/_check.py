@@ -104,7 +104,10 @@ def least_bytes(node: TypeDesc) -> int:
     if isinstance(node, Cluster):
         return size + 2
     if isinstance(node, LVEnum):
-        return size + 2 + _length(node.items)
+        items = node.items
+        if type(items) is not tuple or len(items) > MAX_BYTES:  # refused before the sum
+            return size + 2 + _length(items)
+        return size + 2 + sum(1 + _length(item) for item in items)
     if isinstance(node, PhysicalQuantity):
         return size + 2 + 4 * _length(node.units)
     if isinstance(node, (FixedPoint, Refnum, Waveform)):

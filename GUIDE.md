@@ -183,7 +183,7 @@ type names in messages are cut to 40 characters.
   that many bytes (through the buffer protocol; a non-contiguous `memoryview` is copied
   first) and is linear and bounded whatever follows the descriptor.
 - Trees: every function that takes a tree first adds up a lower bound of its encoded size
-  from lengths alone (at least 4 bytes per node, 4 per dimension or unit, 1 per enum item
+  from lengths alone (at least 4 bytes per node, 4 per dimension or unit, 1 plus the length of each enum item
   plus the name) and refuses a tree past 65535 bytes, counting a shared subtree once for
   every place it appears. No descriptor can be larger, so this bounds the work and output
   of `describe` and `pretty` too.
@@ -220,7 +220,8 @@ type names in messages are cut to 40 characters.
 - Input that is not bytes-like raises `TypeError` (0.2: `TypeDescError`); `memoryview` is
   accepted. Nesting deeper than 64 levels raises `TypeDescError` (0.2: `RecursionError`).
 - `to_bytes` checks the tree first and pads structured descriptors to whole words;
-  `describe` and `pretty` run the same checks, so all three accept the same trees. A node's
+  `describe` and `pretty` run the same checks, so all three accept the same trees (except
+  that `to_bytes` also refuses a tree that passes 65535 bytes only once padded). A node's
   `name` must be the name of its code (`Scalar(0x03, "Bogus")` is refused). `pretty`
   shows names and enum items.
 - The command line prefixes data errors with `lvtypedesc: error:`, cuts usage errors to

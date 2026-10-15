@@ -165,3 +165,12 @@ def test_usage_errors_stay_on_one_line() -> None:
     assert result.returncode == 2
     last = result.stderr.splitlines()[-1]
     assert "\x1b" not in result.stderr and "\\x1b" in last and "\\n" in last
+
+
+@pytest.mark.parametrize("function", FUNCTIONS)
+def test_enum_items_count_their_full_length(function: Any) -> None:
+    big = LVEnum(0x16, "EnumU16", items=("" * 255,) * 65000)
+    with pytest.raises(TypeDescError, match="needs more than 65535 bytes"):
+        function(big)
+    largest = LVEnum(0x16, "EnumU16", items=("x" * 254,) * 256 + ("x" * 247,))
+    assert function(largest)
