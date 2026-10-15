@@ -10,7 +10,7 @@ from __future__ import annotations
 from ._check import check_tree
 from ._describe import leaf_text
 from ._model import VARIABLE, Array, Cluster, LVString, TypeDesc
-from ._nodes import FixedPoint, LVEnum
+from ._nodes import FixedPoint, LVEnum, Refnum, Waveform
 
 _STEP = "  "
 
@@ -46,6 +46,10 @@ def _head(node: TypeDesc) -> str:
         text = f"{node.name} ({len(node.items)} items: {', '.join(map(repr, node.items))})"
     elif isinstance(node, FixedPoint):
         text = f"FXP ({len(node.payload)}-byte payload)"
+    elif isinstance(node, Refnum):
+        text = f"Refnum (subtype 0x{node.subtype:02x})"
+    elif isinstance(node, Waveform) and leaf_text(node) != "Timestamp":
+        text = f"Waveform (subtype 0x{node.subtype:02x})"
     else:
         text = leaf_text(node) or node.name
     return text if node.label is None else f"{text} {node.label!r}"

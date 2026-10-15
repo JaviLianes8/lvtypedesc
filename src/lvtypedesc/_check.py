@@ -2,17 +2,10 @@
 
 from __future__ import annotations
 
-from ._errors import TypeDescError
+from ._errors import TypeDescError, type_name
 from ._model import MAX_DEPTH, Array, Cluster, LVString, TypeDesc
 from ._nodes import FixedPoint, LVEnum, PhysicalQuantity, Refnum, Waveform
-
-_NAME_LIMIT = 40
-
-
-def type_name(value: object) -> str:
-    """The type name of ``value`` for a message, cut to 40 characters."""
-    name = type(value).__name__
-    return name if len(name) <= _NAME_LIMIT else name[:_NAME_LIMIT] + "..."
+from ._values import category, check_values
 
 
 def is_int(value: object) -> bool:
@@ -37,10 +30,13 @@ _WANTED = {
     "fields": "a tuple of TypeDesc",
     "element": "a TypeDesc",
     "node": "a TypeDesc",
+    "class": "a node class such as Scalar or Cluster",
 }
 
 
 def _check_node(node: TypeDesc) -> None:
+    wanted = category(node)
+    _expect(wanted is not None, "class", node)
     _expect(is_int(node.code), "code", node.code)
     _expect(is_int(node.flags), "flags", node.flags)
     _expect(isinstance(node.name, str), "name", node.name)
@@ -67,6 +63,8 @@ def _check_node(node: TypeDesc) -> None:
         _expect(ok, "units", units)
     elif isinstance(node, (FixedPoint, Refnum, Waveform)):
         _expect(isinstance(node.payload, bytes), "payload", node.payload)
+    assert wanted is not None
+    check_values(node, wanted)
 
 
 def children(node: TypeDesc) -> tuple[TypeDesc, ...]:
@@ -79,7 +77,8 @@ def children(node: TypeDesc) -> tuple[TypeDesc, ...]:
 
 
 def check_tree(node: object) -> None:
-    """Raise TypeError for a malformed tree and TypeDescError for one nested too deep."""
+    """Raise TypeError for a malformed tree, TypeDescError for one nested too deep or
+    holding a value that does not fit its descriptor field."""
     _expect(isinstance(node, TypeDesc), "node", node)
     stack: list[tuple[TypeDesc, int]] = [(node, 1)]  # type: ignore[list-item]
     while stack:

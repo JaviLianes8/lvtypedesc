@@ -19,7 +19,9 @@ from lvtypedesc import (
     TypeDesc,
     TypeDescError,
     Waveform,
+    describe,
     parse_type_descriptor,
+    pretty,
     to_bytes,
 )
 
@@ -74,8 +76,11 @@ def test_opaque_payloads_are_written_exactly() -> None:
     assert to_bytes(FixedPoint(0x5F, "FXP", payload=b"\x01")) == bytes.fromhex("0005 005F 01")
 
 
-def test_the_name_field_is_not_written() -> None:
-    assert to_bytes(Scalar(0x03, "anything")) == bytes.fromhex("0004 0003")
+@pytest.mark.parametrize("function", [to_bytes, describe, pretty])
+def test_a_name_that_does_not_match_the_code_is_refused(function: object) -> None:
+    assert callable(function)
+    with pytest.raises(TypeDescError, match=r"^name does not match code 0x03 \(expected I32\)$"):
+        function(Scalar(0x03, "Bogus"))
 
 
 @pytest.mark.parametrize(
@@ -102,8 +107,8 @@ def test_a_code_must_fit_the_class(tree: TypeDesc) -> None:
 @pytest.mark.parametrize(
     ("tree", "message"),
     [
-        (Scalar(0x03, "I32", flags=256), "flags 0x100 do not fit in one byte"),
-        (Scalar(0x03, "I32", flags=-1), "flags out of range do not fit"),
+        (Scalar(0x03, "I32", flags=256), "flags must be 0 to 255"),
+        (Scalar(0x03, "I32", flags=-1), "flags must be 0 to 255"),
         (LVString(0x30, "String", size=-2), "size must be VARIABLE or 0 to 4294967294"),
         (LVString(0x30, "String", size=0xFFFFFFFF), "size must be VARIABLE"),
         (Array(0x40, "Array", element=I32, dimensions=(2**32,)), "dimension must be"),
@@ -122,12 +127,36 @@ def test_a_code_must_fit_the_class(tree: TypeDesc) -> None:
         (Refnum(0x70, "Refnum", label="x"), "a Refnum keeps its name inside payload"),
         (Waveform(0x54, "Waveform", label="x"), "a Waveform keeps its name inside payload"),
         (FixedPoint(0x5F, "FXP", payload=b"\x00" * 65532), "65536 bytes does not fit"),
-        (TypeDesc(0x03, "I32"), "cannot write a node of type TypeDesc"),
     ],
 )
-def test_values_that_do_not_fit_raise(tree: TypeDesc, message: str) -> None:
+@pytest.mark.parametrize("function", [to_bytes, describe, pretty])
+def test_values_that_do_not_fit_raise(function: object, tree: TypeDesc, message: str) -> None:
+    assert callable(function)
+    big_only = "bytes does not fit" in message  # only writing knows the total length
+    if big_only and function is not to_bytes:
+        function(tree)
+        return
     with pytest.raises(TypeDescError, match=message):
-        to_bytes(tree)
+        function(tree)
+
+
+@pytest.mark.parametrize("function", [to_bytes, describe, pretty])
+def test_the_bare_base_class_is_not_a_node(function: object) -> None:
+    assert callable(function)
+    with pytest.raises(TypeError, match="must be a node class such as Scalar or Cluster"):
+        function(TypeDesc(0x03, "I32"))
+
+
+@pytest.mark.parametrize("function", [to_bytes, describe, pretty])
+def test_huge_numbers_are_refused_before_rendering(function: object) -> None:
+    assert callable(function)
+    for tree in (
+        LVString(0x30, "String", size=10**5000),
+        Array(0x40, "Array", element=I32, dimensions=(-5,)),
+        PhysicalQuantity(0x1A, "DBLUnit", units=((10**5000, 1),)),
+    ):
+        with pytest.raises(TypeDescError):
+            function(tree)
 
 
 def test_the_largest_descriptor_is_written() -> None:

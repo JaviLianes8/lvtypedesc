@@ -22,3 +22,11 @@ class TypeDescError(ValueError):
 
 
 TypeDescError.__module__ = "lvtypedesc"
+
+_NAME_LIMIT = 40
+
+
+def type_name(value: object) -> str:
+    """The type name of ``value`` for a message, cut to 40 characters."""
+    name = type(value).__name__
+    return name if len(name) <= _NAME_LIMIT else name[:_NAME_LIMIT] + "..."

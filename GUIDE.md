@@ -151,7 +151,8 @@ Cluster (2 fields)
 `lvtypedesc codes` lists every recognised code, `lvtypedesc --version` prints the version,
 and `python -m lvtypedesc` works the same way. Whitespace in the hex is ignored. Exit codes:
 0 done, 1 bad data (the message goes to stderr, prefixed `lvtypedesc: error:`, cut to 300
-characters, never echoing the input), 2 bad usage. When the reader of the output goes away
+characters, never echoing the input), 2 bad usage (the usage message is cut to 300
+characters). When the reader of the output goes away
 (`lvtypedesc codes | head -1`), the command exits 1 without a traceback.
 
 ## Errors
@@ -159,8 +160,8 @@ characters, never echoing the input), 2 bad usage. When the reader of the output
 | Exception | When |
 | --- | --- |
 | `TypeDescError` | the bytes are not a descriptor this library reads: truncated input, a length below 4, a descriptor running past its parent or the input, fields or a name running past their descriptor, an unknown code, a refused code (Void, ComplexFXP, Set, Map, Typedef), nesting deeper than `MAX_DEPTH` |
-| `TypeDescError` | a tree cannot be written: a code that does not fit the class, flags outside a byte, a size outside 32 bits, a count above 65535, text outside Latin-1 or longer than 255 bytes, a unit outside 16 bits, a label on a node that keeps its name in `payload`, more than 65535 bytes in all |
-| `TypeError` | the argument is not bytes-like (`parse_type_descriptor`) or the tree is malformed: a field of the wrong type anywhere in it (`to_bytes`, `describe`, `pretty`) |
+| `TypeDescError` | a tree holds a value no descriptor can hold (`to_bytes`, `describe` and `pretty` alike): a code that does not fit the class, a `name` that is not the code's name, flags outside a byte, a size or dimension outside 32 bits, a count above 65535, text outside Latin-1 or longer than 255 bytes, a unit outside 16 bits, a label on a node that keeps its name in `payload`; and, for `to_bytes` only, more than 65535 bytes in all |
+| `TypeError` | the argument is not bytes-like (`parse_type_descriptor`) or the tree is malformed: a field of the wrong type anywhere in it, or a bare `TypeDesc` instead of a node class (`to_bytes`, `describe`, `pretty`) |
 
 `TypeDescError` is a `ValueError`. Messages name offsets, codes and limits, never the input;
 type names in messages are cut to 40 characters.
@@ -169,8 +170,8 @@ type names in messages are cut to 40 characters.
 
 - Nesting: arrays and clusters up to `MAX_DEPTH` (64) levels, for reading and for every
   function that takes a tree, so a hostile descriptor cannot exhaust the stack.
-- Size: the 16-bit length word caps a descriptor at 65535 bytes, so parsing is linear and
-  bounded whatever follows the descriptor.
+- Size: the 16-bit length word caps a descriptor at 65535 bytes, so parsing reads at most
+  that many bytes and is linear and bounded whatever follows the descriptor.
 
 ## Not covered
 
@@ -186,17 +187,22 @@ type names in messages are cut to 40 characters.
 
 - Names are read into `label` and written back; 0.2 dropped them, so a named descriptor did
   not survive `to_bytes`. Each node has `flags`, the reserved byte, kept on writing and left
-  out of equality.
+  out of equality. Equality compares `label`, so a named descriptor no longer equals an
+  unnamed template such as `Scalar(0x03, "I32")`; compare `dataclasses.replace(node,
+  label=None)` to ignore names.
 - Enums, physical quantities, variants and waveform types are now read (0.2 refused them).
   Void, ComplexFXP, Set, Map and Typedef are refused by name.
-- `Refnum.subtype` is a property read from `payload`, no longer a constructor argument.
+- `Refnum.subtype` is a property read from `payload`, no longer a constructor argument, and
+  `payload` is keyword-only (`Refnum(0x70, "Refnum", payload=...)`).
   Payloads of fixed-point numbers and refnums include an appended name, as before.
 - A descriptor that runs past its parent, or a string descriptor without its size word, now
   raises `TypeDescError` (0.2 read on into the next bytes, or assumed a variable size).
 - Input that is not bytes-like raises `TypeError` (0.2: `TypeDescError`); `memoryview` is
   accepted. Nesting deeper than 64 levels raises `TypeDescError` (0.2: `RecursionError`).
 - `to_bytes` checks the tree first and pads structured descriptors to whole words;
-  `describe` and `pretty` check it too. `pretty` shows names and enum items.
-- The command line returns exit code 2 for usage errors from `main` (0.2 raised
-  `SystemExit`), prefixes errors with `lvtypedesc: error:`, no longer echoes bad hex, and
-  exits 1 quietly when its output is closed.
+  `describe` and `pretty` run the same checks, so all three accept the same trees. A node's
+  `name` must be the name of its code (`Scalar(0x03, "Bogus")` is refused). `pretty`
+  shows names and enum items.
+- The command line prefixes data errors with `lvtypedesc: error:`, cuts usage errors to
+  300 characters (0.2 echoed a whole unknown argument), exits 1 quietly when its output is
+  closed, and runs as `python -m lvtypedesc`.

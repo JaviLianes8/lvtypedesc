@@ -17,27 +17,30 @@ The public API is now stable: `parse_type_descriptor`, `to_bytes`, `describe`, `
   LabVIEW's own type-descriptor VIs read every test descriptor the way this library does.
 - Names: bit `0x40` of the type-code word announces an appended name, now read into the
   new `label` field and written back by `to_bytes`. The reserved high byte is kept in the
-  new `flags` field, written back and left out of equality.
+  new `flags` field, written back and left out of equality. Equality compares `label`, so
+  a named descriptor no longer equals an unnamed template.
 - New nodes: `LVEnum` (EnumU8, EnumU16, EnumU32, with `items`), `PhysicalQuantity`
   (numbers with units, with `units`), `LVVariant` and `Waveform` (time stamps and other
   waveform types, bytes kept verbatim). `TypeCode`, `Category` and `known_codes()` grow
   with them. Void, ComplexFXP, Set, Map and Typedef are refused by name.
-- `Refnum.subtype` is now a property read from `payload` instead of a constructor field.
+- `Refnum.subtype` is now a property read from `payload` instead of a constructor field;
+  `payload` of `Refnum` and `Waveform` is keyword-only.
 - Stricter reading: a descriptor that runs past its parent, a string descriptor without its
   size word, or a name that runs past its descriptor raises `TypeDescError`. Nesting is
   limited to `MAX_DEPTH` (64) levels instead of failing with `RecursionError`. Input that is
   not bytes-like raises `TypeError`; `memoryview` is accepted.
-- `to_bytes`, `describe` and `pretty` check the tree first: `TypeError` for a malformed
-  tree, `TypeDescError` for a code that does not fit the node's class or a value that does
-  not fit its field. Structured descriptors are padded to whole 16-bit words.
+- `to_bytes`, `describe` and `pretty` run the same checks first: `TypeError` for a malformed
+  tree or a bare `TypeDesc`, `TypeDescError` for a code that does not fit the node's class,
+  a `name` that is not the code's name, or a value that does not fit its field. Structured
+  descriptors are padded to whole 16-bit words. Parsing reads at most 65535 bytes.
 - `pretty` shows names and enum items; `describe` spells enums, units and time stamps.
-- Command line: `python -m lvtypedesc`; usage errors return exit code 2 from `main`; data
-  errors are prefixed `lvtypedesc: error:`, bounded, and never echo the input; a closed
-  output exits 1 without a traceback.
+- Command line: `python -m lvtypedesc`; data errors are prefixed `lvtypedesc: error:`,
+  bounded, and never echo the input; usage errors are cut to 300 characters (0.2.0 echoed a
+  whole unknown argument); a closed output exits 1 without a traceback.
 - README rewritten: the format is NI's published Type Descriptors page, not only
   community notes as 0.2.0 said. New GUIDE with an upgrade section.
 
-## [0.2.0]
+## [0.2.0] - 2026-10-12
 
 - Command-line interface: a `lvtypedesc` console script with `decode` (optional
   `--tree`), `codes`, `--version` and runnable `--help` examples. Errors go to
@@ -54,7 +57,7 @@ The public API is now stable: `parse_type_descriptor`, `to_bytes`, `describe`, `
 - README now states the provenance plainly: the code table is community
   reverse-engineering from the LabVIEW wiki, not an official NI byte spec.
 
-## [0.1.0]
+## [0.1.0] - 2026-10-11 (not published on PyPI)
 
 - First release.
 - `parse_type_descriptor` reads a LabVIEW type-descriptor byte string into a

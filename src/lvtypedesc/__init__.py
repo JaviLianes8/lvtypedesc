@@ -15,8 +15,6 @@ True
 64
 """
 
-from __future__ import annotations
-
 from ._codes import Category, TypeCode, known_codes
 from ._describe import describe
 from ._emit import to_bytes
@@ -36,6 +34,12 @@ from ._parser import parse_type_descriptor
 from ._pretty import pretty
 
 __version__ = "1.0.0"
+
+# Public classes are documented and pickled under the package name, not a private module.
+_PUBLIC: tuple[type, ...] = (Array, Boolean, Category, Cluster, FixedPoint, LVEnum, LVString)
+_PUBLIC += (LVVariant, PhysicalQuantity, Refnum, Scalar, TypeCode, TypeDesc, Waveform)
+for _public in _PUBLIC:
+    _public.__module__ = __name__
 
 __all__ = [
     "MAX_DEPTH",

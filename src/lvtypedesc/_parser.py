@@ -18,9 +18,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from ._check import type_name
 from ._codes import UNSUPPORTED_NAMES, Category, classify
-from ._errors import TypeDescError
+from ._errors import TypeDescError, type_name
 from ._model import HAS_LABEL, MAX_DEPTH, Array, Boolean, Cluster, LVString, Scalar, TypeDesc
 from ._nodes import FixedPoint, LVEnum, LVVariant, PhysicalQuantity, Refnum, Waveform
 from ._readers import Fields, header, size_word
@@ -42,7 +41,7 @@ def parse_type_descriptor(data: bytes | bytearray | memoryview) -> TypeDesc:
     """
     if not isinstance(data, (bytes, bytearray, memoryview)):
         raise TypeError(f"expected bytes, bytearray or memoryview, not {type_name(data)}")
-    raw = bytes(data)
+    raw = bytes(data[:0xFFFF])  # no descriptor is longer, whatever follows it
     node, _ = _parse(raw, 0, len(raw), 1)
     return node
 

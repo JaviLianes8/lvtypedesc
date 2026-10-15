@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import pickle
+from typing import Any
 
 import pytest
 
@@ -54,13 +55,13 @@ I32 = Scalar(0x03, "I32", label="n")
         (
             Refnum(0x70, "Refnum", payload=b"\x01\x2a"),
             "Refnum(subtype=0x12a)",
-            "Refnum(subtype=0x12a)",
+            "Refnum (subtype 0x12a)",
         ),
         (Waveform(0x54, "Waveform", payload=b"\x00\x06"), "Timestamp", "Timestamp"),
         (
             Waveform(0x54, "Waveform", payload=b"\x00\x03"),
             "Waveform(subtype=0x03)",
-            "Waveform(subtype=0x03)",
+            "Waveform (subtype 0x03)",
         ),
         (Cluster(0x50, "Cluster"), "Cluster {  }", "Cluster (0 fields)"),
     ],
@@ -174,3 +175,20 @@ def test_a_rank_zero_array_reads_as_such() -> None:
     tree = Array(0x40, "Array", element=Scalar(0x03, "I32"))
     assert describe(tree) == "0D Array of I32"
     assert pretty(tree) == "Array (rank 0, dims [])\n  I32"
+
+
+def test_public_classes_live_under_the_package_name() -> None:
+    for cls in (Array, Category, Cluster, Refnum, Scalar, TypeCode, TypeDesc, TypeDescError):
+        assert cls.__module__ == "lvtypedesc"
+    assert b"lvtypedesc._" not in pickle.dumps(Cluster(0x50, "Cluster", fields=(I32,)))
+
+
+def positional(name: str) -> list[Any]:
+    return [0x70 if name == "Refnum" else 0x54, name, bytes(2)]
+
+
+def test_refnum_and_waveform_payloads_are_keyword_only() -> None:
+    with pytest.raises(TypeError):
+        Refnum(*positional("Refnum"))
+    with pytest.raises(TypeError):
+        Waveform(*positional("Waveform"))

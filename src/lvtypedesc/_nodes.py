@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ._model import TypeDesc
 
@@ -71,6 +71,7 @@ class Refnum(TypeDesc):
 
     Every byte after the header is kept verbatim in ``payload``, an appended name
     included; ``label`` stays None. ``subtype`` reads the refnum kind word from it.
+    ``payload`` is keyword-only.
 
     >>> from lvtypedesc import parse_type_descriptor
     >>> node = parse_type_descriptor(bytes.fromhex("000E 4070 0002 0672 6566 6E75 6D00"))
@@ -78,7 +79,7 @@ class Refnum(TypeDesc):
     (2, b'\\x06refnum')
     """
 
-    payload: bytes = b""
+    payload: bytes = field(default=b"", kw_only=True)
 
     @property
     def subtype(self) -> int:
@@ -96,14 +97,15 @@ class Waveform(TypeDesc):
     """A waveform-family type (code ``0x54``), such as a time stamp (subtype 6).
 
     Every byte after the header is kept verbatim in ``payload``, an appended name
-    included; ``label`` stays None. ``subtype`` reads the first word of it.
+    included; ``label`` stays None. ``subtype`` reads the first word of it. ``payload``
+    is keyword-only.
 
     >>> from lvtypedesc import parse_type_descriptor
     >>> parse_type_descriptor(bytes.fromhex("000600540006")).subtype
     6
     """
 
-    payload: bytes = b""
+    payload: bytes = field(default=b"", kw_only=True)
 
     @property
     def subtype(self) -> int:
