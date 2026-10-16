@@ -166,6 +166,12 @@ guard before `dict.get`; masking a size already checked; an unreachable `SystemE
 the 300-character cut on CLI data errors (every reachable message is under 80 characters); the
 `_print_message` stream choice (no path reaches it with stderr).
 
+## Independent reviewer (item 16)
+
+| Review | Head | Verdict | Findings and outcome |
+| --- | --- | --- | --- |
+| 1 | 42a89db | FAIL (items 6, 17, 18) | gates alone, docs, packaging, upgrade from 0.2.0, hygiene of tree and history all clean; 8 report mutations re-applied (7 killed as recorded, one variant survived); 40 new mutations: 31 killed, 1 equivalent (enum sum guard at twice the limit), 8 survived (enum and array counts above 255, unit pairs of the wrong length, the second dimension unchecked, dimensions and units counted at 2 bytes, size 0 shown as variable, names aligned on absolute offsets, the 300-character cut raised tenfold). One report line named the factory's rules file and blocked the trace guard. Fixed: report reworded (guard CLEAN), contracts in `tests/test_contract_strength.py` (0744209; all 9 re-applied and killed), name alignment stated in the GUIDE and a notice added to the capture manifest (55a6592) |
+
 ## Decisions for the maintainer
 
 - Typedefs (`0xF1`) are refused: in LabVIEW 2026's datalogs the inner length word of a typedef
