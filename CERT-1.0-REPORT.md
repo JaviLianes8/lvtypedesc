@@ -10,9 +10,33 @@ Progress:
 - [x] Docs: README, GUIDE, CHANGELOG (items 11, 12)
 - [x] Packaging, e2e and upgrade from PyPI 0.2.0 (items 8, 10, 13, 14)
 - [x] Five QA lenses report PASS (item 19)
-- [ ] Independent reviewer (item 16)
-- [ ] Gates (item 15)
-- [ ] PR open and trace guard CLEAN (item 17); merge and publish left to the maintainer
+- [x] Independent reviewer (item 16)
+- [x] Gates (item 15)
+- [x] PR #3 open and trace guard CLEAN (item 17); merge and publish left to the maintainer
+
+## Scorecard (at the head of PR #3)
+
+| # | Item | Verdict | Evidence |
+| --- | --- | --- | --- |
+| 1 | API reviewed for stability | PASS | every 0.2.0 name kept; changes listed in CHANGELOG 1.0.0 and the GUIDE's upgrade section, checked side by side against PyPI 0.2.0 by lenses a and d |
+| 2 | `__all__` exact | PASS | 22 names; `test_contract::test_all_lists_exactly_the_public_api` |
+| 3 | Docstrings with runnable examples, doctests pass | PASS | every public name has `>>>`; `tests/test_docs.py` runs module doctests, README and GUIDE `pycon` blocks and five command transcripts |
+| 4 | Typed end to end | PASS | `mypy --strict src tests scripts` clean; `py.typed` shipped; strict consumer of all 22 names against the installed wheel |
+| 5 | Typed, documented, safe errors | PASS | GUIDE error table; messages name offsets, codes and limits, type names cut to 40 characters; command line errors one bounded line |
+| 6 | Contract asserts the full promise | PASS | 532 tests: promises per public name, LabVIEW captures, NI sources, fuzz, hostile input, and the contracts from the author, lens e and reviewer mutation rounds |
+| 7 | Real ground truth | PASS | sixteen LabVIEW 2026 datalogs and LabVIEW's GetType.llb answers (manifest with SHA-256), NI's Type Descriptors page and the LabVIEW Wiki (fetched, manifest tracked); lens b re-derived with 17 more shipped VIs |
+| 8 | Real e2e incl. PyPI upgrade | PASS | wheel in clean venvs, console script and `python -m` by subprocess, suite from the sdist with `src` removed; PyPI 0.2.0 upgraded in place, every difference documented |
+| 9 | Seeded fuzz, no crash, hang or blow-up | PASS | seeded fuzz and hostile suites; lens c rounds of about 4.5 million cases, linear scaling, size bound before any per-element work |
+| 10 | Every interpreter on this PC | PASS | 3.10.19, 3.11.5, 3.12.12, 3.13.2, 3.14.2 and 3.14.2t from the installed wheel (lens d); 3.13 and 3.14 again by the reviewer |
+| 11 | README | PASS | `twine check --strict` PASSED; absolute links; problem, verified why, install, quick start, GUIDE and CHANGELOG links |
+| 12 | CHANGELOG dated 1.0.0 | PASS | `## [1.0.0] - 2026-10-15` |
+| 13 | pyproject | PASS | 1.0.0, Production/Stable, 3.10 to 3.14, MIT, Homepage/Source/Issues/Changelog, keywords, `dependencies = []` (contract-tested) |
+| 14 | sdist and wheel contents | PASS | wheel: package, `py.typed`, LICENSE; sdist: source, tests with captures and manifests, docs; fetched NI and wiki copies never shipped |
+| 15 | Gates exit 0 alone | PASS | `ruff format --check .`, `ruff check .`, `mypy --strict src`, `pytest` (532 passed, 9 skipped) |
+| 16 | Independent reviewer | PASS | review 1 FAIL (survivors, a report line), review 2 PASS at 5c3a0a5 |
+| 17 | PR, trace guard | ready | PR #3 from `release/1.0.0`, trace guard CLEAN; merge and PyPI publish left to the maintainer |
+| 18 | Mutation round | PASS | author: 40, 38 killed, 2 closed by contracts; blind lens e: 139, 115 killed, 6 equivalent, 18 closed by contracts; reviewer: 40 new, 31 killed, 1 equivalent, 8 (plus one sample variant) closed by contracts |
+| 19 | Five QA lenses | PASS | a (round 2), b (round 1), c (round 2c), d (round 2), e (round 2) |
 
 ## Baseline on 0.2.0 (before any change)
 
@@ -171,6 +195,7 @@ the 300-character cut on CLI data errors (every reachable message is under 80 ch
 | Review | Head | Verdict | Findings and outcome |
 | --- | --- | --- | --- |
 | 1 | 42a89db | FAIL (items 6, 17, 18) | gates alone, docs, packaging, upgrade from 0.2.0, hygiene of tree and history all clean; 8 report mutations re-applied (7 killed as recorded, one variant survived); 40 new mutations: 31 killed, 1 equivalent (enum sum guard at twice the limit), 8 survived (enum and array counts above 255, unit pairs of the wrong length, the second dimension unchecked, dimensions and units counted at 2 bytes, size 0 shown as variable, names aligned on absolute offsets, the 300-character cut raised tenfold). One report line named the factory's rules file and blocked the trace guard. Fixed: report reworded (guard CLEAN), contracts in `tests/test_contract_strength.py` (0744209; all 9 re-applied and killed), name alignment stated in the GUIDE and a notice added to the capture manifest (55a6592) |
+| 2 | 5c3a0a5 | PASS | all seven findings confirmed fixed; trace guard CLEAN; gates alone on a fresh clone (532 passed, 9 skipped without the fetched sources); the 9 survivors re-applied and killed by the named contracts, the equivalent enum guard recorded; `src` unchanged since review 1 |
 
 ## Decisions for the maintainer
 
