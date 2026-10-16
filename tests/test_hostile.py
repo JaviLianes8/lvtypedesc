@@ -39,6 +39,16 @@ def _shared(levels: int) -> Cluster:
     return node  # type: ignore[no-any-return]
 
 
+# Runs first: a cheap test that fails fast if the size bound is lost, before the shared
+# tree below could take forever without it.
+def test_the_largest_writable_tree_is_accepted_and_one_more_node_is_not() -> None:
+    tree = Cluster(0x50, "Cluster", fields=(I32,) * 16382)
+    assert len(to_bytes(tree)) == 0xFFFE
+    assert describe(tree).startswith("Cluster { I32, ")
+    with pytest.raises(TypeDescError, match="needs more than 65535 bytes"):
+        describe(Cluster(0x50, "Cluster", fields=(I32,) * 16383))
+
+
 @pytest.mark.parametrize("function", FUNCTIONS)
 def test_shared_subtrees_are_counted_each_time_and_refused_fast(function: Any) -> None:
     start = time.perf_counter()
@@ -52,14 +62,6 @@ def test_shared_subtrees_are_counted_each_time_and_refused_fast(function: Any) -
         ):
             function(tree)
     assert time.perf_counter() - start < 2.0
-
-
-def test_the_largest_writable_tree_is_accepted_and_one_more_node_is_not() -> None:
-    tree = Cluster(0x50, "Cluster", fields=(I32,) * 16382)
-    assert len(to_bytes(tree)) == 0xFFFE
-    assert describe(tree).startswith("Cluster { I32, ")
-    with pytest.raises(TypeDescError, match="needs more than 65535 bytes"):
-        describe(Cluster(0x50, "Cluster", fields=(I32,) * 16383))
 
 
 @pytest.mark.parametrize("function", FUNCTIONS)
