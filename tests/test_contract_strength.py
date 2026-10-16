@@ -14,6 +14,7 @@ from lvtypedesc import (
     Array,
     Cluster,
     FixedPoint,
+    LVEnum,
     LVString,
     PhysicalQuantity,
     Scalar,
@@ -140,3 +141,53 @@ def test_padding_past_the_length_word_is_refused_by_writing() -> None:
     tree = Cluster(0x50, "Cluster", fields=(Scalar(0x03, "I32", label=""),) + (I32,) * 16381)
     with pytest.raises(TypeDescError, match=r"^descriptor of 65536 bytes does not fit"):
         to_bytes(tree)
+
+
+def test_counts_above_255_are_read_as_sixteen_bits() -> None:
+    enum = LVEnum(0x15, "EnumU8", items=("",) * 256)
+    array = Array(0x40, "Array", element=I32, dimensions=(0,) * 256)
+    for node in (enum, array):
+        assert parse_type_descriptor(to_bytes(node)) == node
+
+
+@pytest.mark.parametrize("function", [to_bytes, describe, pretty])
+def test_unit_pairs_must_have_two_entries(function: object) -> None:
+    assert callable(function)
+    for units in (((1, 2, 3),), ((1,),)):
+        with pytest.raises(TypeError, match="units must be a tuple of"):
+            function(PhysicalQuantity(0x1A, "DBLUnit", units=units))  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("function", [to_bytes, describe, pretty])
+def test_every_dimension_is_checked(function: object) -> None:
+    assert callable(function)
+    for dims in ((1, 2**32), (1, -2)):
+        with pytest.raises(TypeDescError, match="dimension must be VARIABLE"):
+            function(Array(0x40, "Array", element=I32, dimensions=dims))
+
+
+@pytest.mark.parametrize("function", [describe, pretty])
+def test_dimensions_and_units_count_four_bytes_each(function: object) -> None:
+    assert callable(function)
+    dims = Array(0x40, "Array", element=I32, dimensions=(0,) * 16383)
+    units = PhysicalQuantity(0x1A, "DBLUnit", units=((0, 1),) * 16383)
+    for tree in (dims, units):
+        with pytest.raises(TypeDescError, match="needs more than 65535 bytes"):
+            function(tree)
+
+
+def test_a_fixed_size_of_zero_is_shown_as_zero_bytes() -> None:
+    assert pretty(LVString(0x30, "String", size=0)) == "String (size 0 bytes)"
+
+
+def test_names_align_to_the_start_of_their_own_descriptor() -> None:
+    node = parse_type_descriptor(bytes.fromhex("0011 0050 0002 0005000300 0006 4003 016E"))
+    assert isinstance(node, Cluster)
+    assert [field.label for field in node.fields] == [None, "n"]
+
+
+def test_usage_errors_are_cut_at_300_characters(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["x" * 1000]) == 2
+    last = capsys.readouterr().err.splitlines()[-1]
+    message = last.split("error: ", 1)[1]
+    assert len(message) <= 303 and message.endswith("...")
