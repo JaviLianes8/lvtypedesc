@@ -146,8 +146,8 @@ confirmed killed).
 
 ## Independent QA lenses (item 19)
 
-Each lens was a fresh reviewer that read SUBAGENT-RULES.md and CERT-1.0.md, ran things rather
-than reading them, and reported back only.
+Each lens was a fresh, independent review that read the certification checklist first, ran
+things rather than reading them, and reported back only.
 
 | Lens | Round | Head | Verdict | Findings and outcome |
 | --- | --- | --- | --- | --- |
