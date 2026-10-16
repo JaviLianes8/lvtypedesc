@@ -1,5 +1,7 @@
 # lvtypedesc
 
+[![Lianes8 Certified](https://lianes8studio.com/certified/lianes8-certified-badge.svg)](https://lianes8studio.com/certified)
+
 Parse LabVIEW type descriptors into a typed tree, render them, and write them back.
 
 A LabVIEW type descriptor is the short, length-prefixed block of words that says what a
