@@ -49,8 +49,15 @@ def test_the_largest_writable_tree_is_accepted_and_one_more_node_is_not() -> Non
         describe(Cluster(0x50, "Cluster", fields=(I32,) * 16383))
 
 
+def _bound_is_checked(function: Any) -> None:
+    """Fail fast, before the trees below that would take hours without the size bound."""
+    with pytest.raises(TypeDescError, match="needs more than 65535 bytes"):
+        function(Cluster(0x50, "Cluster", fields=(I32,) * 16383))
+
+
 @pytest.mark.parametrize("function", FUNCTIONS)
 def test_shared_subtrees_are_counted_each_time_and_refused_fast(function: Any) -> None:
+    _bound_is_checked(function)
     start = time.perf_counter()
     for tree in (
         _shared(40),
@@ -66,6 +73,7 @@ def test_shared_subtrees_are_counted_each_time_and_refused_fast(function: Any) -
 
 @pytest.mark.parametrize("function", FUNCTIONS)
 def test_wide_nodes_count_their_elements_before_any_work(function: Any) -> None:
+    _bound_is_checked(function)
     quantity = PhysicalQuantity(0x1A, "DBLUnit", units=((1, 1),) * 16000)
     enum = LVEnum(0x15, "EnumU8", items=("",) * 30000)
     dims = Array(0x40, "Array", element=I32, dimensions=(1,) * 16000)
