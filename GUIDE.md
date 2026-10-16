@@ -69,12 +69,13 @@ versions, so every byte after their header is kept in `payload`, a name included
 
 ## Names
 
-A name is a Pascal string (a length byte, then the text) at the next even offset after the
-fields, padded to a whole word. It is LabVIEW's control or cluster element name. LabVIEW
-writes names and enum items in the system code page (Windows-1252 on a Western Windows);
-this library maps each byte to one character (Latin-1), so every byte survives a round
-trip. To read text such as `€` (byte `0x80`), re-decode it:
-`label.encode("latin-1").decode("cp1252")`, and encode the other way before writing.
+A name is a Pascal string (a length byte, then the text) at the next even offset (counted
+from the start of its own descriptor) after the fields, padded to a whole word. It is
+LabVIEW's control or cluster element name. LabVIEW writes names and enum items in the system
+code page (Windows-1252 on a Western Windows); this library maps each byte to one character
+(Latin-1), so every byte survives a round trip. To read text such as `€` (byte `0x80`),
+re-decode it: `label.encode("latin-1").decode("cp1252")`, and encode the other way before
+writing.
 
 Bytes left inside a descriptor after its fields and name (other than the padding byte)
 are ignored and are not written back; `to_bytes` always writes the canonical form.

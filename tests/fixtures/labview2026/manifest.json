@@ -1,6 +1,7 @@
 {
  "labview": "LabVIEW 2026 Community 26.3.1f1 (Windows x64)",
  "method": "VIs shipped with LabVIEW run unmodified through LabVIEW's ActiveX VI Server by scripts/capture-labview-datalogs.ps1 and scripts/capture-labview-gettype.ps1; every VI hashed before and after; files copied unchanged",
+ "notice": "Output of VIs shipped with LabVIEW (NI); the datalogs hold the front-panel control names of those VIs. Kept as test fixtures with this provenance record; the VIs themselves are not included.",
  "files": {
   "Error_Cluster_From_Error_Code.dat": {
    "captured": "2026-10-15",
