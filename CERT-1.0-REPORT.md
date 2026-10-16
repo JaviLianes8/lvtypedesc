@@ -8,8 +8,8 @@ Progress:
 - [x] Errors, typing, docstrings and doctests (items 2 to 5)
 - [x] Contract, fuzz and author mutation round (items 6, 9, 18)
 - [x] Docs: README, GUIDE, CHANGELOG (items 11, 12)
-- [ ] Packaging, e2e and upgrade from PyPI 0.2.0 (items 8, 10, 13, 14)
-- [ ] Five QA lenses report PASS (item 19)
+- [x] Packaging, e2e and upgrade from PyPI 0.2.0 (items 8, 10, 13, 14)
+- [x] Five QA lenses report PASS (item 19)
 - [ ] Independent reviewer (item 16)
 - [ ] Gates (item 15)
 - [ ] PR open and trace guard CLEAN (item 17); merge and publish left to the maintainer
@@ -63,11 +63,16 @@ invalid bytes for out-of-range values.
 
 ## API review (items 1 to 5)
 
-Kept: every 0.2.0 name with its signature. Changed for 1.0.0 (CHANGELOG 1.0.0 and the GUIDE's
-"Upgrading from 0.2"): `label` and `flags` on every node (keyword-only, `flags` out of equality
-as NI advises), `Refnum.subtype` now a property, new `LVEnum`, `PhysicalQuantity`, `LVVariant`,
-`Waveform` and `MAX_DEPTH`, stricter reading, `TypeError` for non-bytes input and malformed
-trees, checked writing, `pretty` with names, a bounded command line with `python -m`.
+Kept: every 0.2.0 name; signatures unchanged except `Refnum` (its `subtype` field became a
+property read from `payload`, and `payload` is keyword-only). Changed for 1.0.0 (CHANGELOG
+1.0.0 and the GUIDE's "Upgrading from 0.2"): `label` and `flags` on every node (keyword-only,
+`flags` out of equality as NI advises, `label` compared), new `LVEnum`, `PhysicalQuantity`,
+`LVVariant`, `Waveform` and `MAX_DEPTH`, stricter reading (at most 65535 bytes, through the
+buffer protocol), `TypeError` for non-bytes input and malformed trees, one set of checks for
+`to_bytes`, `describe` and `pretty` (exact built-in field types, a node's `name` must be its
+code's name, values that fit their fields, a lower bound of the encoded size at most 65535
+bytes), `pretty` with names, a bounded command line with `python -m`. Public classes carry
+`__module__` `lvtypedesc`.
 `TypeDescError` (a `ValueError`, `__module__` `lvtypedesc`) covers data; messages name offsets,
 codes and limits, type names cut to 40 characters. Every public name has a runnable example;
 `tests/test_docs.py` runs every module's doctests, the README and GUIDE `pycon` blocks and the
@@ -123,3 +128,56 @@ confirmed killed).
 | L01 | data errors exit 0 | `_cli.py` | killed | `tests/test_cli.py::test_bad_hex_is_a_data_error_that_never_echoes_it` |
 | L02 | messages not cut | `_cli_io.py` | killed | `tests/test_cli.py::test_usage_errors_do_not_echo_huge_arguments` |
 | L03 | --tree ignored | `_cli.py` | killed | `tests/test_cli.py::test_decode_tree_matches_pretty` |
+
+## Packaging and end-to-end (items 8, 10, 13, 14), lens d at d3eeed9
+
+- `python -m build` and `twine check --strict`: both PASSED. Wheel: the package, `py.typed`,
+  LICENSE, the console entry point. Sdist: `src`, `tests` with the sixteen LabVIEW 2026 datalogs,
+  `gettype.json` and their manifest, the sources manifest only (the fetched NI and wiki copies
+  are excluded even when present), README, GUIDE, CHANGELOG, CONTRIBUTING, LICENSE, pyproject.
+- The wheel in a fresh venv on 3.10.19, 3.11.5, 3.12.12, 3.13.2, 3.14.2 and 3.14.2t, the suite
+  run from the extracted sdist with `src` removed against the installed wheel: green on every
+  interpreter (9 source tests skip without the fetched copies; on 3.10 one more, tomllib).
+- The console script, `python -m lvtypedesc`, every `--help` example, exit codes 0/1/2 by
+  subprocess; a `mypy --strict` consumer of all 22 public names against the installed wheel.
+- PyPI 0.2.0 installed, then upgraded in place: `pip check` clean, no stale files; 101 behaviour
+  differences over about 120 probes, every one stated in CHANGELOG 1.0.0 or the GUIDE's upgrade
+  section after the round-2 fixes.
+
+## Independent QA lenses (item 19)
+
+Each lens was a fresh reviewer that read SUBAGENT-RULES.md and CERT-1.0.md, ran things rather
+than reading them, and reported back only.
+
+| Lens | Round | Head | Verdict | Findings and outcome |
+| --- | --- | --- | --- | --- |
+| a. API and docs | 1 | c9c85ee | FAIL (2 medium, 6 low, 2 info) | a node's `name` could contradict its code and break the round-trip promise; equality now compares `label` (undocumented); `pretty` changed the refnum text; wording of the 0.2 echo; huge ints gave `ValueError` in rendering; bare `TypeDesc` inconsistent; positional `Refnum` payload failed late; parsing copied all input; docs named private `main`; module paths in pickles. Fixed in 1a523db |
+| a | 2 | 1a523db | PASS (3 info) | all ten fixed; error wording and a bare assert polished in 85dd115; `FixedPoint.payload` stays positional (0.2 compatibility) |
+| b. Correctness and ground truth | 1 | ac9f4a5 | PASS (2 low, 1 info) | NI's six examples, 172 leaves from 17 more shipped VIs (U8 to CDB, units, enums, analog and digital waveforms, queue and notifier refnums) and GetType.llb answers on new descriptors all agree, byte for byte; the repo's capture scripts reproduce the fixtures. Low: names are the system code page, not Latin-1 text; bytes left after the fields are dropped silently. Documented and pinned by contracts in 3f0f037 |
+| c. Adversarial and robustness | 1 | 3f0f037 | FAIL (2 medium, 6 low) | 3.06 million fuzz cases, only `TypeDescError`; shared subtrees took exponential time; the command line failed silently on an ASCII console; lying `int`/`tuple`/`bytes` subclasses leaked `ValueError`/`OverflowError` or wrote wrong bytes; control characters in usage errors; memoryview read bound. Fixed in d484425 |
+| c | 2 | d484425, 78926fc, 03e390a | FAIL, then PASS | the node cap did not bound wide nodes (65535 units per node, minutes of work); replaced by a lower bound of the encoded size counted from lengths (78926fc), then enum items counted at full length (03e390a). 1.4 million more fuzz cases, closed pipes, hostile sweep: PASS |
+| d. Packaging and real e2e | 1 | d3eeed9 | PASS (4 low) | above; low: 0.2 nesting wording, bare `TypeDesc` error change missing from the upgrade notes, `release.ps1` ignored exit codes, CRLF working tree. Fixed in ae77b7f and 0c74c77 |
+| d | 2 | ae77b7f | PASS | fixes confirmed |
+| e. Contract strength (blind) | 1 | 0c74c77 | FAIL | 139 mutations: 115 killed (2 only by a timeout), 6 equivalent, 18 survived (exact limits, closed-output exit codes, message wording, the size bound, positional API). Contracts in `tests/test_contract_strength.py` (28256a0) |
+| e | 2 | 28256a0 | PASS | all 18 survivors and the 2 timeout kills re-applied and killed in about 2 s each; the costly hostile tests now check the size bound first (231d235) |
+
+Equivalent mutations argued by lens e: `sorted()` over a table written in code order; the range
+guard before `dict.get`; masking a size already checked; an unreachable `SystemExit` fallback;
+the 300-character cut on CLI data errors (every reachable message is under 80 characters); the
+`_print_message` stream choice (no path reaches it with stderr).
+
+## Decisions for the maintainer
+
+- Typedefs (`0xF1`) are refused: in LabVIEW 2026's datalogs the inner length word of a typedef
+  does not match the bytes it occupies (two reviewers confirmed), so no layout is guessed.
+- Fixed-point, refnum and waveform descriptors keep their bytes (an appended name included) in
+  `payload`; their layout is version-specific and unpublished.
+- Names and enum items map one byte to one character (Latin-1) so every byte round-trips;
+  LabVIEW writes the system code page, and the GUIDE shows how to re-decode.
+- Bytes left inside a descriptor after its fields and name are ignored, not written back.
+- `FixedPoint.payload` stays positional (as in 0.2.0); `Refnum` and `Waveform` take it by keyword.
+- LabVIEW 2026 is the only version captured; NI says codes may change between versions.
+- The LabVIEW captures (sixteen datalogs, about 15 KB, and the GetType answers) ship in the
+  sdist as test fixtures with their manifest; the fetched NI and wiki pages stay local.
+- GUIDE.md and this report are longer than 200 lines; the rule applies to source and test files,
+  and `tests/test_packaging.py` enforces it for them.
