@@ -1,125 +1,112 @@
-"""Recursive descent over a LabVIEW type descriptor byte string.
+"""Recursive descent over a LabVIEW type descriptor in its nested (type string) form.
 
-Layout of the common types, all big-endian:
+Layout, all big-endian, as NI documents it for Variant To Flattened String:
 
-- header: a 16-bit length (bytes in this descriptor, including the length) and a
-  16-bit type-code word whose low byte is the type code.
-- scalar, boolean: header only.
-- string, path, picture: header plus a 32-bit size word (0xFFFFFFFF = variable).
-- array: header, a 16-bit dimension count, one 32-bit size per dimension, then
-  the element descriptor.
-- cluster: header, a 16-bit field count, then that many descriptors in order.
-- fxp, refnum: header plus a type-specific payload kept as raw bytes, because its
-  internal layout is version-specific and not fully documented.
+- header: a 16-bit length (of the whole descriptor, header included) and a 16-bit
+  type-code word; the low byte is the type code, the high byte is reserved by LabVIEW
+  (bit 0x40 marks an appended name).
+- string, path, picture: a 32-bit size word (0xFFFFFFFF = variable).
+- array: a 16-bit dimension count, one 32-bit size per dimension, the element descriptor.
+- cluster: a 16-bit element count, then the element descriptors in order.
+- enum: a 16-bit item count, then the item names as Pascal strings.
+- physical quantity: a 16-bit count, then (16-bit base index, signed 16-bit exponent).
+- fixed-point, refnum, waveform: version-specific bytes, kept verbatim.
+- name: a Pascal string at the next even offset, padded to an even length.
 """
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from ._codes import UNSUPPORTED_NAMES, Category, classify
-from ._errors import TypeDescError
-from ._model import (
-    VARIABLE,
-    Array,
-    Boolean,
-    Cluster,
-    FixedPoint,
-    LVString,
-    Refnum,
-    Scalar,
-    TypeDesc,
-)
+from ._errors import TypeDescError, type_name
+from ._model import HAS_LABEL, MAX_DEPTH, Array, Boolean, Cluster, LVString, Scalar, TypeDesc
+from ._nodes import FixedPoint, LVEnum, LVVariant, PhysicalQuantity, Refnum, Waveform
+from ._readers import Fields, header, size_word
 
-_HEADER = 4
-_U32_VARIABLE = 0xFFFFFFFF
+_OPAQUE = {Category.FXP: FixedPoint, Category.REFNUM: Refnum, Category.WAVEFORM: Waveform}
 
 
-def parse_type_descriptor(data: bytes) -> TypeDesc:
+def parse_type_descriptor(data: bytes | bytearray | memoryview) -> TypeDesc:
     """Parse the leading type descriptor in ``data`` into a typed tree.
 
-    Trailing bytes (such as the flattened data that follows a descriptor) are
-    ignored. Raises :class:`TypeDescError` on truncated or unsupported input.
+    Bytes after the descriptor (such as the flattened data that follows it) are
+    ignored. Raises :class:`TypeDescError` on truncated, malformed or unsupported
+    input and :class:`TypeError` when ``data`` is not bytes-like.
+
+    >>> from lvtypedesc import parse_type_descriptor, describe
+    >>> node = parse_type_descriptor(bytes.fromhex("000E 0040 0001 FFFFFFFF 0004 000A"))
+    >>> describe(node), node.dimensions
+    ('1D Array of DBL', (-1,))
     """
-    if not isinstance(data, (bytes, bytearray)):
-        raise TypeDescError("expected bytes")
-    node, _ = _parse(bytes(data), 0)
+    raw = _snapshot(data)
+    node, _ = _parse(raw, 0, len(raw), 1)
     return node
 
 
-def _u16(data: bytes, offset: int) -> int:
-    if offset + 2 > len(data):
-        raise TypeDescError(f"truncated: need 2 bytes at offset {offset}")
-    return int.from_bytes(data[offset : offset + 2], "big")
+def _snapshot(data: object) -> bytes:
+    """Copy at most the first 65535 bytes (no descriptor is longer) through the buffer
+    protocol, so a subclass cannot change what is read."""
+    if not isinstance(data, (bytes, bytearray, memoryview)):
+        raise TypeError(f"expected bytes, bytearray or memoryview, not {type_name(data)}")
+    try:
+        with memoryview(data) as view:
+            if view.c_contiguous:
+                with view.cast("B") as flat:
+                    return bytes(flat[:0xFFFF])
+            return view.tobytes()[:0xFFFF]
+    except ValueError:  # a released view
+        raise TypeError("expected readable bytes, the memoryview is released") from None
 
 
-def _u32(data: bytes, offset: int) -> int:
-    if offset + 4 > len(data):
-        raise TypeDescError(f"truncated: need 4 bytes at offset {offset}")
-    return int.from_bytes(data[offset : offset + 4], "big")
-
-
-def _parse(data: bytes, offset: int) -> tuple[TypeDesc, int]:
-    length = _u16(data, offset)
-    code = _u16(data, offset + 2) & 0xFF
-    end = offset + length
-    if length < _HEADER:
-        raise TypeDescError(f"length {length} too small at offset {offset}")
-    if end > len(data):
-        raise TypeDescError(f"descriptor at offset {offset} runs past the input")
-
+def _parse(data: bytes, offset: int, limit: int, depth: int) -> tuple[TypeDesc, int]:
+    end, code, flags = header(data, offset, limit)
     kind = classify(code)
     if kind is None:
         name = UNSUPPORTED_NAMES.get(code)
         detail = f"unsupported type {name}" if name else "unknown type code"
         raise TypeDescError(f"{detail} 0x{code:02x} at offset {offset}")
-
     category, name = kind
+    if category in _OPAQUE:
+        payload = data[offset + 4 : end]
+        return _OPAQUE[category](code, name, payload=payload, flags=flags), end
+    fields = Fields(data, offset, end)
+    node = _structured(fields, category, code, name, depth)
+    label = fields.label() if flags & HAS_LABEL else None
+    return _with(node, label, flags), end
+
+
+def _with(node: TypeDesc, label: str | None, flags: int) -> TypeDesc:
+    return replace(node, label=label, flags=flags)
+
+
+def _structured(fields: Fields, category: Category, code: int, name: str, depth: int) -> TypeDesc:
     if category is Category.SCALAR:
-        return Scalar(code, name), end
+        return Scalar(code, name)
     if category is Category.BOOLEAN:
-        return Boolean(code, name), end
+        return Boolean(code, name)
+    if category is Category.VARIANT:
+        return LVVariant(code, name)
     if category is Category.STRING:
-        return _parse_string(data, offset, end, code, name), end
+        return LVString(code, name, size=size_word(fields.u32()))
+    if category is Category.ENUM:
+        count = fields.u16()
+        return LVEnum(code, name, items=tuple(fields.pstr() for _ in range(count)))
+    if category is Category.QUANTITY:
+        count = fields.u16()
+        units = tuple((fields.u16(), fields.i16()) for _ in range(count))
+        return PhysicalQuantity(code, name, units=units)
     if category is Category.ARRAY:
-        return _parse_array(data, offset, code, name), end
-    if category is Category.CLUSTER:
-        return _parse_cluster(data, offset, code, name), end
-    if category is Category.FXP:
-        return FixedPoint(code, name, payload=data[offset + _HEADER : end]), end
-    return _parse_refnum(data, offset, end, code, name), end
+        rank = fields.u16()
+        dims = tuple(size_word(fields.u32()) for _ in range(rank))
+        element = _child(fields, depth)
+        return Array(code, name, element=element, dimensions=dims)
+    count = fields.u16()
+    return Cluster(code, name, fields=tuple(_child(fields, depth) for _ in range(count)))
 
 
-def _parse_string(data: bytes, offset: int, end: int, code: int, name: str) -> LVString:
-    if end - offset >= _HEADER + 4:
-        raw = _u32(data, offset + _HEADER)
-        size = VARIABLE if raw == _U32_VARIABLE else raw
-    else:
-        size = VARIABLE
-    return LVString(code, name, size=size)
-
-
-def _parse_array(data: bytes, offset: int, code: int, name: str) -> Array:
-    rank = _u16(data, offset + _HEADER)
-    pos = offset + _HEADER + 2
-    dims: list[int] = []
-    for _ in range(rank):
-        size = _u32(data, pos)
-        dims.append(VARIABLE if size == _U32_VARIABLE else size)
-        pos += 4
-    element, _ = _parse(data, pos)
-    return Array(code, name, element=element, dimensions=tuple(dims))
-
-
-def _parse_cluster(data: bytes, offset: int, code: int, name: str) -> Cluster:
-    count = _u16(data, offset + _HEADER)
-    pos = offset + _HEADER + 2
-    fields: list[TypeDesc] = []
-    for _ in range(count):
-        child, pos = _parse(data, pos)
-        fields.append(child)
-    return Cluster(code, name, fields=tuple(fields))
-
-
-def _parse_refnum(data: bytes, offset: int, end: int, code: int, name: str) -> Refnum:
-    payload = data[offset + _HEADER : end]
-    subtype = _u16(data, offset + _HEADER) if end - offset >= _HEADER + 2 else 0
-    return Refnum(code, name, subtype=subtype, payload=payload)
+def _child(fields: Fields, depth: int) -> TypeDesc:
+    if depth >= MAX_DEPTH:
+        raise TypeDescError(f"descriptor nested deeper than {MAX_DEPTH} levels")
+    node, fields.pos = _parse(fields.data, fields.pos, fields.end, depth + 1)
+    return node

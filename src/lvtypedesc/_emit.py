@@ -1,59 +1,71 @@
-"""Re-emit a typed tree as a canonical short-form type descriptor.
-
-``to_bytes`` is the inverse of :func:`parse_type_descriptor` for every node type
-this library models. It writes the short-form descriptor (16-bit length) and
-raises :class:`TypeDescError` when a tree is too large for that form, rather than
-guessing the long-form layout.
-"""
+"""Write a typed tree back as a canonical nested type descriptor."""
 
 from __future__ import annotations
 
+from ._check import check_tree
 from ._errors import TypeDescError
-from ._model import (
-    VARIABLE,
-    Array,
-    Boolean,
-    Cluster,
-    FixedPoint,
-    LVString,
-    Refnum,
-    Scalar,
-    TypeDesc,
-)
+from ._model import HAS_LABEL, VARIABLE, Array, Cluster, LVString, TypeDesc
+from ._nodes import LVEnum, PhysicalQuantity
+from ._readers import U32_VARIABLE
+from ._values import OPAQUE, pstr
 
-_HEADER = 4
-_U32_VARIABLE = 0xFFFFFFFF
 _MAX_LENGTH = 0xFFFF
 
 
 def to_bytes(node: TypeDesc) -> bytes:
-    """Serialise ``node`` back into a canonical short-form type descriptor."""
+    """Write ``node`` as a nested type descriptor, the inverse of parsing.
+
+    ``parse_type_descriptor(to_bytes(node)) == node`` for every valid tree, and
+    ``to_bytes`` reproduces any descriptor LabVIEW wrote in its canonical form: names
+    as Pascal strings at an even offset, zero padding, nothing after the fields.
+    Raises :class:`TypeError` for a malformed tree and :class:`TypeDescError` for one
+    that cannot be written (a code that does not match the node's class, a name that
+    does not match the code, a value out of range, more than 65535 bytes).
+
+    >>> from lvtypedesc import Cluster, Scalar, to_bytes
+    >>> tree = Cluster(0x50, "Cluster", fields=(Scalar(0x03, "I32", label="n"),))
+    >>> to_bytes(tree).hex(" ", -2)
+    '000c 0050 0001 0006 4003 016e'
+    """
+    check_tree(node)
+    return _emit(node)
+
+
+def _emit(node: TypeDesc) -> bytes:
     body = _body(node)
-    length = _HEADER + len(body)
+    flags = node.flags
+    if node.label is not None:
+        body += b"\x00" * (len(body) % 2) + pstr(node.label, "label")
+        flags |= HAS_LABEL
+    if not isinstance(node, OPAQUE):  # opaque payloads are kept exactly as read
+        body += b"\x00" * (len(body) % 2)  # a type string is a sequence of 16-bit words
+    length = 4 + len(body)
     if length > _MAX_LENGTH:
-        raise TypeDescError(f"descriptor of {length} bytes is too large for the short form")
-    return _u16(length) + _u16(node.code & 0xFFFF) + body
+        raise TypeDescError(f"descriptor of {length} bytes does not fit the 16-bit length")
+    return _u16(length) + bytes((flags, node.code)) + body
 
 
 def _body(node: TypeDesc) -> bytes:
-    if isinstance(node, (Scalar, Boolean)):
-        return b""
     if isinstance(node, LVString):
-        size = _U32_VARIABLE if node.size == VARIABLE else node.size
-        return _u32(size)
+        return _size(node.size)
     if isinstance(node, Array):
-        dims = b"".join(_u32(_U32_VARIABLE if d == VARIABLE else d) for d in node.dimensions)
-        return _u16(node.rank) + dims + to_bytes(node.element)
+        dims = b"".join(_size(d) for d in node.dimensions)
+        return _u16(len(node.dimensions)) + dims + _emit(node.element)
     if isinstance(node, Cluster):
-        return _u16(len(node.fields)) + b"".join(to_bytes(f) for f in node.fields)
-    if isinstance(node, (FixedPoint, Refnum)):
+        return _u16(len(node.fields)) + b"".join(_emit(f) for f in node.fields)
+    if isinstance(node, LVEnum):
+        return _u16(len(node.items)) + b"".join(pstr(item, "item") for item in node.items)
+    if isinstance(node, PhysicalQuantity):
+        pairs = (_u16(base) + exp.to_bytes(2, "big", signed=True) for base, exp in node.units)
+        return _u16(len(node.units)) + b"".join(pairs)
+    if isinstance(node, OPAQUE):
         return node.payload
-    raise TypeDescError(f"cannot serialise node of type {type(node).__name__}")
+    return b""
 
 
 def _u16(value: int) -> bytes:
-    return int(value).to_bytes(2, "big")
+    return value.to_bytes(2, "big")
 
 
-def _u32(value: int) -> bytes:
-    return int(value).to_bytes(4, "big")
+def _size(value: int) -> bytes:
+    return (U32_VARIABLE if value == VARIABLE else value).to_bytes(4, "big")

@@ -46,10 +46,9 @@ def test_to_bytes_ignores_trailing_flattened_data() -> None:
 
 
 def test_to_bytes_refuses_a_tree_too_large_for_the_short_form() -> None:
-    huge = Scalar(0x03, "I32")
     # Build a cluster whose serialised body would exceed the 16-bit length word.
     from lvtypedesc import Cluster
 
-    big = Cluster(0x50, "Cluster", fields=tuple(huge for _ in range(20000)))
-    with pytest.raises(TypeDescError, match="too large"):
+    big = Cluster(0x50, "Cluster", fields=(Scalar(0x03, "I32", label="abcd"),) * 8000)
+    with pytest.raises(TypeDescError, match="does not fit the 16-bit length"):
         to_bytes(big)

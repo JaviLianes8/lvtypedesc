@@ -4,31 +4,41 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lvtypedesc"
-version = "0.2.0"
-description = "Parse LabVIEW type-descriptor byte strings into a readable, typed schema"
+version = "1.0.0"
+description = "Parse LabVIEW type descriptors into a typed tree, render them, and write them back"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Javier Lianes", email = "javier@lianes8studio.com" }]
-keywords = []
+keywords = ["labview", "type descriptor", "type string", "variant", "flatten", "ni", "binary", "parser"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries",
     "Typing :: Typed",
 ]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["ruff", "mypy", "pytest", "build", "twine"]
+dev = ["ruff", "mypy", "pytest", "build", "twine", "hatchling", "editables"]
 
 [project.scripts]
 lvtypedesc = "lvtypedesc._cli:main"
 
 [project.urls]
 Homepage = "https://lianes8studio.com"
-Repository = "https://github.com/JaviLianes8/lvtypedesc"
+Source = "https://github.com/JaviLianes8/lvtypedesc"
 Issues = "https://github.com/JaviLianes8/lvtypedesc/issues"
 Changelog = "https://github.com/JaviLianes8/lvtypedesc/blob/main/CHANGELOG.md"
 LinkedIn = "https://www.linkedin.com/in/jlianes/"
@@ -36,6 +46,20 @@ Funding = "https://buymeacoffee.com/jlianesglrs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/lvtypedesc"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src",
+    "tests",
+    "README.md",
+    "GUIDE.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "pyproject.toml",
+    "requirements-dev.txt",
+]
+exclude = ["tests/fixtures/sources/ni-*", "tests/fixtures/sources/labviewwiki-*", "**/__pycache__"]
 
 [tool.ruff]
 line-length = 100

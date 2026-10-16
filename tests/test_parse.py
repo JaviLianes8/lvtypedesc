@@ -114,8 +114,8 @@ def test_unknown_type_code_raises() -> None:
 
 
 def test_unsupported_type_code_names_the_type() -> None:
-    with pytest.raises(TypeDescError, match="EnumU16"):
-        parse_type_descriptor(td("0004 0016"))
+    with pytest.raises(TypeDescError, match="unsupported type Typedef 0xf1 at offset 0"):
+        parse_type_descriptor(td("0004 00F1"))
 
 
 def test_length_word_below_header_raises() -> None:
@@ -123,6 +123,6 @@ def test_length_word_below_header_raises() -> None:
         parse_type_descriptor(td("0002 0003"))
 
 
-def test_non_bytes_input_raises() -> None:
-    with pytest.raises(TypeDescError, match="expected bytes"):
+def test_non_bytes_input_raises_type_error() -> None:
+    with pytest.raises(TypeError, match="expected bytes, bytearray or memoryview, not str"):
         parse_type_descriptor("0004 0003")  # type: ignore[arg-type]

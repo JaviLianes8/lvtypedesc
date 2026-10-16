@@ -1,0 +1,391 @@
+{
+  "labview": "26.3.1f1",
+  "inputs": "hand-written descriptors from scripts/make_gettype_jobs.py",
+  "results": [
+    {
+      "id": "array_dbl",
+      "vi": "TD_Get Array Information.vi",
+      "hex": "000E 0040 0001 FFFFFFFF 0004 000A",
+      "Number of Dimensions": [
+        1
+      ],
+      "Dim Sizes": [
+        [
+          -1
+        ]
+      ],
+      "Contained TD Offset": [
+        5
+      ]
+    },
+    {
+      "id": "array_bool_2d",
+      "vi": "TD_Get Array Information.vi",
+      "hex": "0012 0040 0002 FFFFFFFF FFFFFFFF 0004 0021",
+      "Number of Dimensions": [
+        2
+      ],
+      "Dim Sizes": [
+        [
+          -1,
+          -1
+        ]
+      ],
+      "Contained TD Offset": [
+        7
+      ]
+    },
+    {
+      "id": "array_fixed_3d",
+      "vi": "TD_Get Array Information.vi",
+      "hex": "001A 4040 0003 00000002 00000003 00000004 0004 0002 0367 6964",
+      "Number of Dimensions": [
+        3
+      ],
+      "Dim Sizes": [
+        [
+          2,
+          3,
+          4
+        ]
+      ],
+      "Contained TD Offset": [
+        9
+      ]
+    },
+    {
+      "id": "array_of_cluster",
+      "vi": "TD_Get Array Information.vi",
+      "hex": "001C 0040 0001 FFFFFFFF 0012 0050 0002 0004 0003 0008 0030 FFFFFFFF",
+      "Number of Dimensions": [
+        1
+      ],
+      "Dim Sizes": [
+        [
+          -1
+        ]
+      ],
+      "Contained TD Offset": [
+        5
+      ]
+    },
+    {
+      "id": "cluster_i16_u32",
+      "vi": "TD_Get Cluster Information.vi",
+      "hex": "000E 0050 0002 0004 0002 0004 0007",
+      "Number of Elements": [
+        2
+      ],
+      "Contained TD Offsets": [
+        [
+          3,
+          5
+        ]
+      ]
+    },
+    {
+      "id": "cluster_named",
+      "vi": "TD_Get Cluster Information.vi",
+      "hex": "0020 4050 0003 0006 4003 016E 0008 4021 026F 6B00 0008 0030 FFFFFFFF 0361 6263",
+      "Number of Elements": [
+        3
+      ],
+      "Contained TD Offsets": [
+        [
+          3,
+          6,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "cluster_nested",
+      "vi": "TD_Get Cluster Information.vi",
+      "hex": "0018 0050 0002 000E 0050 0002 0004 0001 0004 0005 0004 000A",
+      "Number of Elements": [
+        2
+      ],
+      "Contained TD Offsets": [
+        [
+          3,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "cluster_empty",
+      "vi": "TD_Get Cluster Information.vi",
+      "hex": "0006 0050 0000",
+      "Number of Elements": [
+        0
+      ],
+      "Contained TD Offsets": [
+        []
+      ]
+    },
+    {
+      "id": "enum_radio",
+      "vi": "TD_Get Enum Information.vi",
+      "hex": "0016 0015 0003 0261 6D02 666D 0966 6D20 7374 6572 656F",
+      "Number of Values": [
+        3
+      ],
+      "Value Names": [
+        [
+          "am",
+          "fm",
+          "fm stereo"
+        ]
+      ]
+    },
+    {
+      "id": "enum_radio_named",
+      "vi": "TD_Get Enum Information.vi",
+      "hex": "001C 4015 0003 0261 6D02 666D 0966 6D20 7374 6572 656F 0572 6164 696F",
+      "Number of Values": [
+        3
+      ],
+      "Value Names": [
+        [
+          "am",
+          "fm",
+          "fm stereo"
+        ]
+      ]
+    },
+    {
+      "id": "enum_odd_named",
+      "vi": "TD_Get Enum Information.vi",
+      "hex": "0012 4016 0002 0141 0242 4300 0478 7979 7A00",
+      "Number of Values": [
+        2
+      ],
+      "Value Names": [
+        [
+          "A",
+          "BC"
+        ]
+      ]
+    },
+    {
+      "id": "enum_u32_one",
+      "vi": "TD_Get Enum Information.vi",
+      "hex": "000A 0017 0001 0130 0000",
+      "Number of Values": [
+        1
+      ],
+      "Value Names": [
+        [
+          "0"
+        ]
+      ]
+    },
+    {
+      "id": "unit_m_per_s",
+      "vi": "TD_Get Unit Information.vi",
+      "hex": "000E 001A 0002 0002 FFFF 0003 0001",
+      "N Units": [
+        2
+      ],
+      "Base Units": [
+        [
+          2,
+          3
+        ]
+      ],
+      "Base Exponents": [
+        [
+          -1,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "unit_three",
+      "vi": "TD_Get Unit Information.vi",
+      "hex": "0012 0019 0003 0004 0001 0003 0002 0002 FFFE",
+      "N Units": [
+        3
+      ],
+      "Base Units": [
+        [
+          4,
+          3,
+          2
+        ]
+      ],
+      "Base Exponents": [
+        [
+          1,
+          2,
+          -2
+        ]
+      ]
+    },
+    {
+      "id": "string_var",
+      "vi": "TD_Get StringLike Information.vi",
+      "hex": "0008 0030 FFFFFFFF",
+      "Max Length (-1 for Unbounded)": [
+        -1
+      ]
+    },
+    {
+      "id": "path_named",
+      "vi": "TD_Get StringLike Information.vi",
+      "hex": "000E 4032 FFFFFFFF 0470 6174 6800",
+      "Max Length (-1 for Unbounded)": [
+        -1
+      ]
+    },
+    {
+      "id": "picture_fixed",
+      "vi": "TD_Get StringLike Information.vi",
+      "hex": "0008 0033 00000010",
+      "Max Length (-1 for Unbounded)": [
+        16
+      ]
+    },
+    {
+      "id": "refnum_file",
+      "vi": "TD_Get Ref Info.vi",
+      "hex": "000E 4070 0002 0672 6566 6E75 6D00",
+      "Refnum Type": [
+        2
+      ]
+    },
+    {
+      "id": "make_cluster",
+      "vi": "TD_Create Cluster.vi",
+      "hex": "0004 0003 0004 000A",
+      "ClusterTD": [
+        [
+          14,
+          80,
+          2,
+          4,
+          3,
+          4,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "make_cluster_named",
+      "vi": "TD_Create Cluster.vi",
+      "hex": "0004 0003 0004 000A",
+      "ClusterTD": [
+        [
+          18,
+          16464,
+          2,
+          4,
+          3,
+          4,
+          10,
+          865,
+          25187
+        ]
+      ]
+    },
+    {
+      "id": "make_cluster_even_name",
+      "vi": "TD_Create Cluster.vi",
+      "hex": "0006 4003 016E 0008 0030 FFFFFFFF",
+      "ClusterTD": [
+        [
+          24,
+          16464,
+          2,
+          6,
+          16387,
+          366,
+          8,
+          48,
+          -1,
+          -1,
+          609,
+          25088
+        ]
+      ]
+    },
+    {
+      "id": "make_cluster_one",
+      "vi": "TD_Create Cluster.vi",
+      "hex": "0004 0021",
+      "ClusterTD": [
+        [
+          18,
+          16464,
+          1,
+          4,
+          33,
+          1651,
+          29793,
+          29813,
+          29440
+        ]
+      ]
+    },
+    {
+      "id": "make_array",
+      "vi": "TD_Create Array.vi",
+      "hex": "0004 000A",
+      "NewArray": [
+        [
+          14,
+          64,
+          1,
+          -1,
+          -1,
+          4,
+          10
+        ]
+      ]
+    },
+    {
+      "id": "make_array_2d_named",
+      "vi": "TD_Create Array.vi",
+      "hex": "0004 0021",
+      "NewArray": [
+        [
+          22,
+          16448,
+          2,
+          -1,
+          -1,
+          -1,
+          -1,
+          4,
+          33,
+          609,
+          25088
+        ]
+      ]
+    },
+    {
+      "id": "make_array_of_cluster",
+      "vi": "TD_Create Array.vi",
+      "hex": "000E 0050 0002 0004 0003 0004 000A",
+      "NewArray": [
+        [
+          30,
+          16448,
+          1,
+          -1,
+          -1,
+          14,
+          80,
+          2,
+          4,
+          3,
+          4,
+          10,
+          1138,
+          28535,
+          29440
+        ]
+      ]
+    }
+  ]
+}
